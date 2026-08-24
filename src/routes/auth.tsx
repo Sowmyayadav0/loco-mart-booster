@@ -20,6 +20,15 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { navaStore } from "@/lib/navaStore";
 import type { Profile } from "@/types";
+import { WelcomeSplashPage } from "@/components/auth/WelcomeSplashPage";
+import { SuperAppOrbitScreen } from "@/components/auth/SuperAppOrbitScreen";
+import { LanguageSelectScreen } from "@/components/auth/LanguageSelectScreen";
+import { PermissionsScreen } from "@/components/auth/PermissionsScreen";
+import { PhoneNumberScreen } from "@/components/auth/PhoneNumberScreen";
+import { OtpPasswordScreen } from "@/components/auth/OtpPasswordScreen";
+import { ReferralCodeScreen } from "@/components/auth/ReferralCodeScreen";
+import { DeliveryAddressScreen } from "@/components/auth/DeliveryAddressScreen";
+import { YouAreAllSetScreen } from "@/components/auth/YouAreAllSetScreen";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -49,9 +58,12 @@ const LANGUAGES = [
 const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"] as const;
 
 function AuthPage() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [showOrbit, setShowOrbit] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signup");
-  // Step Sequence: 1: Language -> 2: Phone & OTP -> 3: Personal Details -> 4: Location & High-Accuracy GPS
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  // Step Sequence: 1: Language -> 2: Permissions -> 3: Referral Code -> 4: Delivery Address -> 5: You're All Set
+  const [step, setStep] = useState<number>(1);
+  const [referralCode, setReferralCode] = useState("");
 
   // Step 1: Language
   const [selectedLang, setSelectedLang] = useState<string>("en");
@@ -331,569 +343,145 @@ function AuthPage() {
     void navigate({ to: "/" });
   }
 
+  if (showSplash) {
+    return (
+      <WelcomeSplashPage
+        onProceed={() => {
+          setShowSplash(false);
+          setShowOrbit(true);
+        }}
+        onSignInDirect={() => {
+          setShowSplash(false);
+          setShowOrbit(false);
+          setMode("signin");
+        }}
+      />
+    );
+  }
+
+  if (showOrbit) {
+    return (
+      <SuperAppOrbitScreen
+        onGetStarted={() => {
+          setShowOrbit(false);
+          setStep(1);
+        }}
+        onSkip={() => {
+          setShowOrbit(false);
+          setStep(1);
+        }}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 1) {
+    return (
+      <LanguageSelectScreen
+        initialLang={selectedLang}
+        onContinue={(langCode) => {
+          setSelectedLang(langCode);
+          setStep(2);
+        }}
+        onBack={() => {
+          setShowOrbit(true);
+        }}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 2) {
+    return (
+      <PermissionsScreen
+        onNext={() => setStep(3)}
+        onSkip={() => setStep(3)}
+        onBack={() => setStep(1)}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 3) {
+    return (
+      <PhoneNumberScreen
+        onContinue={(phoneNum) => {
+          setPhone(phoneNum);
+          setStep(4);
+        }}
+        onBack={() => setStep(2)}
+        onSwitchToPasswordLogin={() => {
+          setMode("signin");
+        }}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 4) {
+    return (
+      <OtpPasswordScreen
+        phone={phone || "+91 98765 43210"}
+        onVerifySuccess={() => setStep(5)}
+        onBack={() => setStep(3)}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 5) {
+    return (
+      <ReferralCodeScreen
+        onApply={(code) => {
+          setReferralCode(code);
+          setStep(6);
+        }}
+        onSkip={() => setStep(6)}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 6) {
+    return (
+      <DeliveryAddressScreen
+        onConfirm={(addr) => {
+          setHouse(addr);
+          setStep(7);
+        }}
+        onSkip={() => setStep(7)}
+        onBack={() => setStep(5)}
+      />
+    );
+  }
+
+  if (mode === "signup" && step === 7) {
+    return (
+      <YouAreAllSetScreen
+        onStartExploring={() => {
+          const finalLocation = house || "Flat 402, Prestige Elm, Koramangala 5th Block, Bengaluru";
+          navaStore.setActiveLocation(finalLocation);
+
+          const userProfile: Profile = {
+            id: "usr-" + Date.now(),
+            phone: phone || "+91 98765 43210",
+            email: "customer@locomart.com",
+            full_name: "LocoMart Customer",
+            avatar_url: null,
+            referral_code: referralCode || "LOCO999",
+            gender: "Male",
+            language: selectedLang,
+          };
+          navaStore.setSession(userProfile, "token-" + Date.now());
+          toast.success("Welcome to LocoMart! You're all set.");
+          void navigate({ to: "/" });
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="w-full max-w-5xl max-h-[92vh] flex items-center justify-center p-1 sm:p-3">
-      {/* Split Grid: Left Side Website Branding, Right Side Compact Form */}
-      <div className="w-full max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl border border-border bg-card shadow-2xl grid lg:grid-cols-12">
-        {/* LEFT SIDE: Website Name & Branding */}
-        <section className="relative overflow-hidden gradient-hero p-8 sm:p-12 text-primary-foreground flex flex-col justify-between lg:col-span-5">
-          <div className="relative z-10 space-y-6">
-            <div className="flex items-center gap-3">
-              <span className="grid size-12 place-items-center rounded-2xl bg-white/20 text-2xl font-black text-white shadow-md backdrop-blur">
-                L
-              </span>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-white">
-                  LocoMart
-                </h1>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground/80">
-                  Super App
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3.5 py-1 text-xs font-bold backdrop-blur">
-                <FiZap className="size-3.5" /> 10-15 Min Delivery
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight">
-                Everything local, delivered fast.
-              </h2>
-              <p className="text-xs sm:text-sm text-primary-foreground/90 leading-relaxed">
-                Order fresh food, shop superstores, book zero-surge rides, and send instant parcels.
-              </p>
-            </div>
-
-            <ul className="space-y-3 text-xs text-primary-foreground/95 pt-2">
-              <li className="flex items-center gap-2.5">
-                <span className="grid size-6 place-items-center rounded-full bg-white/20 text-xs">🍛</span>
-                <span><b>Fresh Food & Groceries</b> · Dairy, Bakery & Hot Meals</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <span className="grid size-6 place-items-center rounded-full bg-white/20 text-xs">🛍️</span>
-                <span><b>Shop Hub</b> · Fashion, Electronics & Pharmacy</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <span className="grid size-6 place-items-center rounded-full bg-white/20 text-xs">🛺</span>
-                <span><b>LocoMart Rides</b> · Bike, Auto & Cabs</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <span className="grid size-6 place-items-center rounded-full bg-white/20 text-xs">📦</span>
-                <span><b>Parcel Courier</b> · Live Order Tracking</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="relative z-10 pt-8 border-t border-white/20 text-[11px] text-primary-foreground/80 flex items-center justify-between">
-            <span>🛡️ 100% Safe & Secure</span>
-            <span>LocoMart Inc.</span>
-          </div>
-
-          <div className="absolute -bottom-10 -right-10 text-[160px] opacity-15 select-none pointer-events-none">
-            ⚡
-          </div>
-        </section>
-
-        {/* RIGHT SIDE: Compact Form Container */}
-        <section className="p-6 sm:p-8 lg:col-span-7 flex flex-col justify-between">
-          <div>
-            {/* Mode Switcher */}
-            <div className="grid grid-cols-2 rounded-2xl bg-muted p-1 text-xs font-bold mb-6">
-              <button
-                type="button"
-                onClick={() => setMode("signup")}
-                className={`rounded-xl py-2.5 transition-all ${
-                  mode === "signup" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Create Account
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("signin")}
-                className={`rounded-xl py-2.5 transition-all ${
-                  mode === "signin" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Sign In
-              </button>
-            </div>
-
-            {mode === "signin" ? (
-              /* SIGN IN FORM */
-              <div className="space-y-5 max-w-sm mx-auto py-4">
-                <div className="space-y-1 text-center">
-                  <h3 className="text-xl font-black">Welcome Back</h3>
-                  <p className="text-xs text-muted-foreground">Sign in with registered Phone or Email</p>
-                </div>
-
-                <form onSubmit={handleSignInSubmit} className="space-y-3.5">
-                  <div>
-                    <label className="text-xs font-bold text-foreground mb-1 block">Phone / Email</label>
-                    <div className="relative">
-                      <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-4" />
-                      <input
-                        type="text"
-                        required
-                        value={loginPhoneOrEmail}
-                        onChange={(e) => setLoginPhoneOrEmail(e.target.value)}
-                        placeholder="+91 98765 43210 or email"
-                        className="h-10 w-full rounded-2xl border border-border bg-background pl-10 pr-4 text-xs font-medium outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-foreground mb-1 block">Password</label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-4" />
-                      <input
-                        type="password"
-                        required
-                        minLength={6}
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="Enter password"
-                        className="h-10 w-full rounded-2xl border border-border bg-background pl-10 pr-4 text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="h-11 w-full rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground shadow-md transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                  >
-                    Sign In <FiArrowRight />
-                  </button>
-                </form>
-              </div>
-            ) : (
-              /* COMPACT MULTI-STEP SIGNUP FORM */
-              <div className="space-y-5">
-                {/* Progress bar */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
-                    <span className="text-primary font-black">
-                      Step {step} of 4: {
-                        step === 1 ? "App Language" :
-                        step === 2 ? "Phone & OTP" :
-                        step === 3 ? "Personal Details" : "GPS Location"
-                      }
-                    </span>
-                    <span>{step * 25}%</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300 rounded-full"
-                      style={{ width: `${step * 25}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* STEP 1: LANGUAGE SELECTION */}
-                {step === 1 ? (
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-black flex items-center gap-1.5">
-                        🌐 Choose Language
-                      </h3>
-                      <p className="text-xs text-muted-foreground">Select your preferred app language</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {LANGUAGES.map((lang) => {
-                        const active = selectedLang === lang.code;
-                        return (
-                          <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => setSelectedLang(lang.code)}
-                            className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${
-                              active
-                                ? "border-primary bg-primary/10 text-primary shadow-2xs scale-105"
-                                : "border-border bg-card text-foreground hover:border-primary/40"
-                            }`}
-                          >
-                            <span className="text-xl mb-0.5">{lang.flag}</span>
-                            <span className="font-extrabold text-xs">{lang.native}</span>
-                            <span className="text-[9px] text-muted-foreground">{lang.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setStep(2)}
-                      className="h-11 w-full rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground shadow-md transition-transform hover:scale-[1.01] flex items-center justify-center gap-2"
-                    >
-                      Next: Phone Number & OTP <FiArrowRight className="size-4" />
-                    </button>
-                  </div>
-                ) : step === 2 ? (
-                  /* STEP 2: PHONE & OTP */
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-black flex items-center gap-1.5">
-                        📱 Phone Number & OTP
-                      </h3>
-                      <p className="text-xs text-muted-foreground">Verify your mobile number with OTP</p>
-                    </div>
-
-                    {!otpSent ? (
-                      <form onSubmit={handleSendOtp} className="space-y-3.5">
-                        <div>
-                          <label className="text-xs font-bold text-foreground mb-1 block">Mobile Number</label>
-                          <div className="flex gap-2">
-                            <span className="flex items-center rounded-2xl border border-border bg-muted/60 px-3 text-xs font-extrabold text-foreground">
-                              🇮🇳 +91
-                            </span>
-                            <div className="relative flex-1">
-                              <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-3.5" />
-                              <input
-                                type="tel"
-                                required
-                                maxLength={10}
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                                placeholder="98765 43210"
-                                className="h-10 w-full rounded-2xl border border-border bg-background pl-9 pr-3 text-xs font-bold tracking-wider outline-none focus:border-primary"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setStep(1)}
-                            className="h-10 rounded-2xl border border-border px-4 text-xs font-bold hover:bg-muted"
-                          >
-                            Back
-                          </button>
-                          <button
-                            type="submit"
-                            className="h-10 flex-1 rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground shadow-md transition-transform hover:scale-[1.01] flex items-center justify-center gap-2"
-                          >
-                            Send OTP <FiArrowRight />
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleVerifyOtp} className="space-y-4">
-                        <p className="text-xs text-muted-foreground">
-                          Enter 4-digit code sent to <b className="text-foreground">+91 {phone}</b>
-                        </p>
-
-                        <div className="flex justify-center gap-2">
-                          {[0, 1, 2, 3].map((idx) => (
-                            <input
-                              key={idx}
-                              id={`otp-${idx}`}
-                              type="text"
-                              maxLength={1}
-                              value={otp[idx]}
-                              onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, "");
-                                const newOtp = [...otp];
-                                newOtp[idx] = val;
-                                setOtp(newOtp);
-                                if (val && idx < 3) {
-                                  document.getElementById(`otp-${idx + 1}`)?.focus();
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Backspace" && !otp[idx] && idx > 0) {
-                                  document.getElementById(`otp-${idx - 1}`)?.focus();
-                                }
-                              }}
-                              className="size-12 rounded-2xl border-2 border-border bg-background text-center text-lg font-black outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                            />
-                          ))}
-                        </div>
-
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <button
-                            type="button"
-                            onClick={() => setOtpSent(false)}
-                            className="font-bold text-muted-foreground hover:text-foreground"
-                          >
-                            Change Number
-                          </button>
-                          {otpTimer > 0 ? (
-                            <span>Resend in <b>{otpTimer}s</b></span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOtpTimer(30);
-                                toast.success("OTP sent! (Test code: 1234)");
-                              }}
-                              className="font-extrabold text-primary hover:underline"
-                            >
-                              Resend Code
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setStep(1)}
-                            className="h-10 rounded-2xl border border-border px-4 text-xs font-bold hover:bg-muted"
-                          >
-                            Back
-                          </button>
-                          <button
-                            type="submit"
-                            className="h-10 flex-1 rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground shadow-md transition-transform hover:scale-[1.01] flex items-center justify-center gap-2"
-                          >
-                            Verify & Continue <FiArrowRight />
-                          </button>
-                        </div>
-                      </form>
-                    )}
-                  </div>
-                ) : step === 3 ? (
-                  /* STEP 3: PERSONAL DETAILS */
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-black flex items-center gap-1.5">
-                        👤 Personal Details
-                      </h3>
-                      <p className="text-xs text-muted-foreground">Name, Email, Gender and DOB</p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-xs font-bold text-foreground mb-1 block">Full Name (Username) *</label>
-                        <div className="relative">
-                          <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-3.5" />
-                          <input
-                            type="text"
-                            required
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Rahul Sharma"
-                            className="h-10 w-full rounded-2xl border border-border bg-background pl-9 pr-3 text-xs outline-none focus:border-primary"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-foreground mb-1 block">Email Address *</label>
-                        <div className="relative">
-                          <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-3.5" />
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="rahul@example.com"
-                            className="h-10 w-full rounded-2xl border border-border bg-background pl-9 pr-3 text-xs outline-none focus:border-primary"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-foreground mb-1 block">Gender *</label>
-                        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-                          {GENDER_OPTIONS.map((g) => (
-                            <button
-                              key={g}
-                              type="button"
-                              onClick={() => setGender(g)}
-                              className={`rounded-xl border py-2 px-1 text-[11px] font-extrabold transition-all ${
-                                gender === g
-                                  ? "border-primary bg-primary text-primary-foreground shadow-2xs"
-                                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-                              }`}
-                            >
-                              {g}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-foreground mb-1 block">Date of Birth (DOB) *</label>
-                        <div className="relative">
-                          <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-3.5" />
-                          <input
-                            type="date"
-                            required
-                            value={dob}
-                            onChange={(e) => setDob(e.target.value)}
-                            className="h-10 w-full rounded-2xl border border-border bg-background pl-9 pr-3 text-xs outline-none focus:border-primary"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setStep(2)}
-                        className="h-10 rounded-2xl border border-border px-4 text-xs font-bold hover:bg-muted"
-                      >
-                        Back
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!name.trim()) {
-                            toast.error("Please enter your Full Name.");
-                            return;
-                          }
-                          if (!email.trim() || !email.includes("@")) {
-                            toast.error("Please enter a valid Email Address.");
-                            return;
-                          }
-                          setStep(4);
-                        }}
-                        className="h-10 flex-1 rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground shadow-md transition-transform hover:scale-[1.01] flex items-center justify-center gap-2"
-                      >
-                        Next: GPS Location <FiArrowRight />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* STEP 4: LOCATION & ACCURATE GPS WITH PINCODE MAPPING */
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-black flex items-center gap-1.5">
-                        📍 GPS Location & Pincode Detection
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Detect your address via GPS or enter your 6-digit Pincode to auto-map place.
-                      </p>
-                    </div>
-
-                    {/* GPS AUTO-DETECT BUTTON */}
-                    <button
-                      type="button"
-                      onClick={detectHighAccuracyGps}
-                      disabled={gpsLoading}
-                      className="w-full rounded-2xl border-2 border-primary/40 bg-primary/10 p-3 text-xs font-extrabold text-primary shadow-2xs transition-all hover:bg-primary hover:text-primary-foreground flex items-center justify-center gap-2 group"
-                    >
-                      <FiNavigation className={`size-4 ${gpsLoading ? "animate-spin" : "group-hover:rotate-45 transition-transform"}`} />
-                      {gpsLoading
-                        ? "Detecting High-Accuracy GPS Position…"
-                        : gpsDetected
-                        ? "📍 Location Auto-Detected via GPS!"
-                        : "Auto-Detect My Location (GPS)"}
-                    </button>
-
-                    {/* LIVE MAPPED LOCATION PREVIEW CARD */}
-                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-950/40 p-3.5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                          🗺️ Home Location Preview
-                        </span>
-                        <span className="rounded-full bg-emerald-600/20 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800 dark:text-emerald-300">
-                          {gpsDetected ? "GPS Verified" : pincodeMappedInfo ? "Pincode Mapped" : "Active Location"}
-                        </span>
-                      </div>
-
-                      <p className="text-xs font-black text-foreground leading-tight">
-                        {house ? `${house}, ` : ""}{area ? `${area}, ` : ""}{city} - {pincode}
-                      </p>
-
-                      {pincodeMappedInfo ? (
-                        <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center gap-1">
-                          <FiCheckCircle className="size-3 shrink-0" />
-                          <span>Mapped via Pincode: {pincodeMappedInfo}</span>
-                        </p>
-                      ) : null}
-
-                      {coords.lat ? (
-                        <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1.5 pt-0.5 border-t border-emerald-200/50 dark:border-emerald-800/40">
-                          <FiCompass className="size-3 text-emerald-600 shrink-0" />
-                          <span>GPS Coordinates: {coords.lat.toFixed(4)}, {coords.lng?.toFixed(4)}</span>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <div>
-                        <label className="text-[11px] font-bold text-foreground mb-0.5 block">House / Flat No.</label>
-                        <input
-                          type="text"
-                          value={house}
-                          onChange={(e) => setHouse(e.target.value)}
-                          placeholder="e.g. Flat 402, Building A"
-                          className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[11px] font-bold text-foreground mb-0.5 block">Street / Area *</label>
-                        <input
-                          type="text"
-                          required
-                          value={area}
-                          onChange={(e) => setArea(e.target.value)}
-                          placeholder="e.g. Indiranagar 100 Feet Road"
-                          className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[11px] font-bold text-foreground mb-0.5 block">City *</label>
-                          <input
-                            type="text"
-                            required
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            placeholder="Bengaluru"
-                            className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-0.5">
-                            <label className="text-[11px] font-bold text-foreground block">Pincode *</label>
-                            {pincodeLoading ? (
-                              <span className="text-[9px] font-extrabold text-emerald-600 animate-pulse">Mapping...</span>
-                            ) : null}
-                          </div>
-                          <input
-                            type="text"
-                            required
-                            maxLength={6}
-                            value={pincode}
-                            onChange={(e) => handlePincodeChange(e.target.value)}
-                            placeholder="e.g. 560038"
-                            className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs outline-none focus:border-primary font-bold"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setStep(3)}
-                        className="h-10 rounded-2xl border border-border px-4 text-xs font-bold hover:bg-muted"
-                      >
-                        Back
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={handleCompleteRegistration}
-                        className="h-10 flex-1 rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground shadow-md transition-transform hover:scale-[1.01] flex items-center justify-center gap-2 disabled:opacity-60"
-                      >
-                        Complete Registration 🚀
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
-    </div>
+    <PhoneNumberScreen
+      onContinue={(phoneNum) => {
+        setPhone(phoneNum);
+        setStep(4);
+      }}
+      onBack={() => setStep(2)}
+      onSwitchToPasswordLogin={() => setStep(4)}
+    />
   );
 }

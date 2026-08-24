@@ -27,6 +27,7 @@ import { api } from "@/lib/api";
 import { navaStore } from "@/lib/navaStore";
 import { signOutFirebase } from "@/lib/firebase";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageSelectScreen } from "@/components/auth/LanguageSelectScreen";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
@@ -288,6 +289,23 @@ function AccountPage() {
             </div>
           </button>
 
+          {/* Replay Onboarding Launch Flow */}
+          <Link
+            to="/launch"
+            className="flex items-center justify-between p-4 hover:bg-muted/40 transition-colors"
+          >
+            <div className="flex items-center gap-3.5">
+              <span className="grid size-10 place-items-center rounded-2xl bg-cyan-100 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 shrink-0">
+                <FiAward className="size-4.5" />
+              </span>
+              <div>
+                <span className="text-xs font-bold text-foreground block">App Onboarding Experience</span>
+                <span className="text-[10px] text-muted-foreground block">Replay starting splash & setup flow</span>
+              </div>
+            </div>
+            <FiChevronRight className="size-4 text-muted-foreground" />
+          </Link>
+
           {/* Privacy */}
           <div className="flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer">
             <div className="flex items-center gap-3.5">
@@ -349,56 +367,14 @@ function AccountPage() {
         </section>
       </main>
 
-      {/* LANGUAGE SELECTION MODAL */}
+      {/* FULL-SCREEN LANGUAGE SELECTION PAGE (Image 1 Design) */}
       {showLanguageModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="relative w-full max-w-md rounded-3xl bg-background border border-border p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-border/50 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="grid size-9 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-600 font-bold">
-                  <FiGlobe className="size-5" />
-                </span>
-                <div>
-                  <h3 className="font-extrabold text-base text-foreground">Select App Language</h3>
-                  <p className="text-xs text-muted-foreground">Choose your preferred language</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowLanguageModal(false)}
-                className="p-1.5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              >
-                <FiX className="size-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5 max-h-[60vh] overflow-y-auto pr-1">
-              {LANGUAGES.map((lang) => {
-                const isSelected = lang.code === selectedLangCode;
-                return (
-                  <button
-                    key={lang.code}
-                    type="button"
-                    onClick={() => handleSelectLanguage(lang.code)}
-                    className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                      isSelected
-                        ? "border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-black shadow-2xs"
-                        : "border-border/70 hover:border-border hover:bg-muted/50 text-foreground font-semibold"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-lg">{lang.flag}</span>
-                      <div>
-                        <div className="text-xs">{lang.name}</div>
-                        <div className="text-[10px] text-muted-foreground">{lang.native}</div>
-                      </div>
-                    </div>
-                    {isSelected ? <FiCheck className="size-4 text-emerald-600 shrink-0" /> : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div className="fixed inset-0 z-50 bg-[#FAFDFB] overflow-y-auto">
+          <LanguageSelectScreen
+            initialLang={selectedLangCode}
+            onContinue={(code) => handleSelectLanguage(code)}
+            onBack={() => setShowLanguageModal(false)}
+          />
         </div>
       ) : null}
     </div>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { COURIER_SPEEDS, PACKAGE_TYPES, SAVED_PLACES, haversineKm } from "@/lib/verticals";
 import { currency } from "@/utils/format";
+import { ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
 
 export const Route = createFileRoute("/courier")({
   head: () => ({
@@ -37,6 +38,8 @@ function CourierPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
+      {/* 1. TOP SERVICE CATEGORY SWITCHER */}
+      <ServiceCategorySwitcher activeService="courier" />
       <header>
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Send a parcel</h1>
         <p className="mt-1 text-muted-foreground">Doorstep pickup in minutes. Pay only for the distance you send.</p>

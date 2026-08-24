@@ -27,6 +27,7 @@ import {
   haversineKm,
 } from "@/lib/verticals";
 import { currency } from "@/utils/format";
+import { ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
 
 export const Route = createFileRoute("/rides")({
   head: () => ({
@@ -197,6 +198,8 @@ function RidesPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:py-8">
+      {/* 1. TOP SERVICE CATEGORY SWITCHER */}
+      <ServiceCategorySwitcher activeService="ride" />
       {/* Top Title & Subtitle */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
         <div>

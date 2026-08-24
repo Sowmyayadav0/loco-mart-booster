@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CourierRouteImport } from './routes/courier'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as RidesRouteImport } from './routes/rides'
@@ -59,6 +60,11 @@ const CourierRoute = CourierRouteImport.update({
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchRoute = LaunchRouteImport.update({
+  id: '/launch',
+  path: '/launch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OffersRoute = OffersRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/courier': typeof CourierRoute
   '/explore': typeof ExploreRoute
+  '/launch': typeof LaunchRoute
   '/offers': typeof OffersRoute
   '/rewards': typeof RewardsRoute
   '/rides': typeof RidesRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/courier': typeof CourierRoute
   '/explore': typeof ExploreRoute
+  '/launch': typeof LaunchRoute
   '/offers': typeof OffersRoute
   '/rewards': typeof RewardsRoute
   '/rides': typeof RidesRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/courier': typeof CourierRoute
   '/explore': typeof ExploreRoute
+  '/launch': typeof LaunchRoute
   '/offers': typeof OffersRoute
   '/rewards': typeof RewardsRoute
   '/rides': typeof RidesRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/courier'
     | '/explore'
+    | '/launch'
     | '/offers'
     | '/rewards'
     | '/rides'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/courier'
     | '/explore'
+    | '/launch'
     | '/offers'
     | '/rewards'
     | '/rides'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/courier'
     | '/explore'
+    | '/launch'
     | '/offers'
     | '/rewards'
     | '/rides'
@@ -295,6 +307,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CourierRoute: typeof CourierRoute
   ExploreRoute: typeof ExploreRoute
+  LaunchRoute: typeof LaunchRoute
   OffersRoute: typeof OffersRoute
   RewardsRoute: typeof RewardsRoute
   RidesRoute: typeof RidesRoute
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/launch': {
+      id: '/launch'
+      path: '/launch'
+      fullPath: '/launch'
+      preLoaderRoute: typeof LaunchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/offers': {
@@ -495,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CourierRoute: CourierRoute,
   ExploreRoute: ExploreRoute,
+  LaunchRoute: LaunchRoute,
   OffersRoute: OffersRoute,
   RewardsRoute: RewardsRoute,
   RidesRoute: RidesRoute,

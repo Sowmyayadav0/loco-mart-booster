@@ -47,24 +47,28 @@ function useUnread() {
   return (data ?? []).filter((n) => !n.is_read).length;
 }
 
-// Subcategories under SHOP
-const SHOP_SUBCATEGORIES = [
-  { slug: "fashion", label: "Fashion", icon: "👗" },
-  { slug: "electronics", label: "Electronics", icon: "📱" },
-  { slug: "pharmacy", label: "Pharmacy", icon: "💊" },
-  { slug: "pets", label: "Pet Supplies", icon: "🐶" },
-  { slug: "flowers", label: "Flowers", icon: "💐" },
-  { slug: "hardware", label: "Hardware", icon: "🔧" },
+// Subcategories under FOOD (Restaurants & Cuisines ONLY)
+const FOOD_SUBCATEGORIES = [
+  { slug: "restaurants", label: "Restaurants & Biryani", icon: "🍲" },
+  { slug: "restaurants", label: "Arabian & Mandi", icon: "🍢" },
+  { slug: "restaurants", label: "Pizza & Pasta", icon: "🍕" },
+  { slug: "restaurants", label: "Burgers & Fast Food", icon: "🍔" },
+  { slug: "restaurants", label: "Sweets & Desserts", icon: "🧁" },
 ] as const;
 
-// Subcategories under FOOD
-const FOOD_SUBCATEGORIES = [
+// Subcategories under SHOP (Groceries, Supermarket, Pharmacy, Fashion, etc.)
+const SHOP_SUBCATEGORIES = [
+  { slug: "grocery", label: "Groceries & Snacks", icon: "🛒" },
   { slug: "dairy", label: "Dairy & Eggs", icon: "🥛" },
   { slug: "bakery", label: "Bakery & Cakes", icon: "🥐" },
-  { slug: "restaurants", label: "Restaurants", icon: "🍽️" },
   { slug: "fruits", label: "Fruits & Veggies", icon: "🍎" },
-  { slug: "grocery", label: "Snacks & Drinks", icon: "🍿" },
   { slug: "meat", label: "Meat & Seafood", icon: "🍗" },
+  { slug: "pharmacy", label: "Pharmacy & Wellness", icon: "💊" },
+  { slug: "fashion", label: "Fashion & Apparel", icon: "👗" },
+  { slug: "electronics", label: "Mobiles & Electronics", icon: "📱" },
+  { slug: "pets", label: "Pet Supplies", icon: "🐶" },
+  { slug: "flowers", label: "Flowers & Gifts", icon: "💐" },
+  { slug: "hardware", label: "Hardware & Tools", icon: "🔧" },
 ] as const;
 
 // Account Sidebar Quick Tools Section
@@ -84,7 +88,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const unread = useUnread();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
@@ -124,11 +128,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     void navigate({ to: "/" });
   };
 
-  // If on Auth Page (/auth), render full-screen non-scrolling layout without top header or sidebar
-  if (pathname === "/auth") {
+  // If on Auth Page (/auth) or Launch Page (/launch), render full-screen layout without top header or sidebar
+  if (pathname === "/auth" || pathname === "/launch") {
     return (
-      <div className="h-screen w-screen overflow-hidden bg-background flex items-center justify-center p-2 sm:p-4 select-none">
-        <main className="w-full max-w-6xl max-h-full flex items-center justify-center overflow-hidden">{children}</main>
+      <div className="h-screen w-screen overflow-hidden bg-background flex items-center justify-center p-0 select-none">
+        <main className="w-full h-full flex items-center justify-center overflow-hidden">{children}</main>
       </div>
     );
   }
@@ -137,10 +141,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-slate-50/60 dark:bg-background text-foreground">
-      {/* LEFT SIDEBAR NAVIGATION WITH DROPDOWNS FOR FOOD AND SHOP */}
+      {/* LEFT SIDEBAR NAVIGATION DRAWER */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between border-r border-border/70 bg-card p-4 transition-all duration-300 w-64 overflow-y-auto no-scrollbar shadow-2xl lg:shadow-none",
+          "fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between border-r border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition-transform duration-300 w-[290px] max-w-[85vw] overflow-y-auto no-scrollbar shadow-2xl",
           (sidebarOpen || mobileSidebarOpen) ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -420,108 +424,81 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* MOBILE OVERLAY BACKDROP */}
+      {/* BACKDROP OVERLAY */}
       {(sidebarOpen || mobileSidebarOpen) ? (
         <div
           tabIndex={-1}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs transition-opacity"
           onClick={closeSidebar}
         />
       ) : null}
 
-      {/* MAIN CONTAINER (DYNAMICALLY OFFSETS WHEN SIDEBAR IS OPEN) */}
-      <div className={cn("flex flex-1 flex-col min-w-0 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-0")}>
+      {/* MAIN CONTAINER */}
+      <div className="flex flex-1 flex-col min-w-0 transition-all duration-300">
         {/* TOP HEADER BAR */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/60 bg-background/90 px-4 py-2.5 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            {/* Hamburger Mobile/Desktop Toggle */}
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 via-[#044D63] to-teal-950 px-4 py-2.5 backdrop-blur-xl shadow-lg text-white">
+          <div className="flex items-center gap-2.5">
+            {/* Hamburger Menu Button */}
             <button
               type="button"
-              onClick={() => {
-                setSidebarOpen(true);
-                setMobileSidebarOpen(true);
-              }}
-              className={cn(
-                "p-1.5 rounded-xl border border-border/60 bg-card hover:bg-muted text-foreground transition-all flex items-center justify-center shadow-2xs shrink-0",
-                (sidebarOpen || mobileSidebarOpen) ? "opacity-0 pointer-events-none invisible w-0 p-0 border-0 overflow-hidden" : "opacity-100 visible"
-              )}
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center shadow-md shrink-0 backdrop-blur-md"
               aria-label="Open Sidebar"
               title="Open Menu"
             >
               <FiMenu className="size-5" />
             </button>
 
-            {/* Location Selector Badge */}
+            {/* Location Selector Badge - Vibrant Pill */}
             <button
               type="button"
               onClick={() => setLocationPickerOpen(true)}
-              className="flex items-center gap-1.5 rounded-2xl bg-muted/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shrink-0"
+              className="flex items-center gap-1.5 rounded-2xl bg-cyan-400/15 border border-cyan-400/40 px-3 py-1.5 text-xs text-cyan-200 backdrop-blur-md transition-all hover:bg-cyan-400/25 shadow-sm max-w-[140px] sm:max-w-[200px] shrink-0"
               title="Change Delivery Location"
             >
-              <FiMapPin className="text-emerald-600 size-3.5 shrink-0" />
-              <span className="hidden sm:inline">
-                Deliver to <b className="text-foreground font-extrabold">{selectedLocation}</b>
+              <FiMapPin className="text-[#00BCD4] size-3.5 shrink-0 animate-pulse" />
+              <span className="truncate font-black text-xs text-white">
+                {selectedLocation.split(",")[0] || "Location"}
               </span>
-              <span className="sm:hidden font-extrabold text-foreground">{selectedLocation.split(",")[0]}</span>
-              <FiChevronDown className="size-3" />
+              <FiChevronDown className="size-3 shrink-0 text-cyan-300" />
             </button>
           </div>
 
-          {/* Center Search Input */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (term.trim()) void navigate({ to: "/search", search: { q: term.trim() } });
-            }}
-            className="relative flex items-center flex-1 max-w-md mx-2"
-          >
-            <input
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              placeholder="Search for food, groceries, fashion, electronics..."
-              className="h-10 w-full rounded-full border border-border bg-muted/40 pl-4 pr-11 text-xs font-medium outline-none focus:border-emerald-500 focus:bg-card focus:shadow-2xs transition-all"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 grid size-8 place-items-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-xs"
-            >
-              <FiSearch className="size-3.5" />
-            </button>
-          </form>
-
           {/* Right Header Navigation Icons & Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Link
               to="/offers"
-              className="hidden md:flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground px-2 py-1"
+              className="hidden lg:flex items-center gap-1 text-xs font-black text-amber-300 bg-amber-400/15 border border-amber-300/40 rounded-xl px-2.5 py-1.5 hover:bg-amber-400/25 transition-all"
             >
-              <FiTag className="size-4 text-emerald-600" /> Offers
+              <FiTag className="size-3.5 text-amber-300" /> Offers
             </Link>
 
             <Link
               to="/orders"
-              className="hidden md:flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground px-2 py-1"
+              className="hidden lg:flex items-center gap-1 text-xs font-black text-cyan-200 bg-cyan-400/15 border border-cyan-300/40 rounded-xl px-2.5 py-1.5 hover:bg-cyan-400/25 transition-all"
             >
-              <FiPackage className="size-4 text-emerald-600" /> Orders
+              <FiPackage className="size-3.5 text-cyan-300" /> Orders
             </Link>
 
             <Link
               to="/wishlist"
-              className="hidden md:flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground px-2 py-1"
+              className="hidden md:grid size-9 place-items-center rounded-xl border border-rose-400/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 transition-all shrink-0"
+              title="Wishlist"
             >
-              <FiHeart className="size-4 text-destructive" /> Wishlist
+              <FiHeart className="size-4.5 stroke-[2]" />
             </Link>
 
-            {/* Notifications Icon with Red Badge */}
+            {/* Notifications Icon Button */}
             <Link
               to="/notifications"
-              className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="relative grid size-9 place-items-center rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all shrink-0 backdrop-blur-md"
               aria-label="Notifications"
+              title="Notifications"
             >
-              <FiBell className="size-4.5" />
+              <FiBell className="size-4.5 stroke-[2]" />
               {unread > 0 ? (
-                <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-destructive text-[9px] font-black text-white ring-2 ring-background">
-                  {unread}
+                <span className="absolute -top-1 -right-1 grid size-4.5 place-items-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-slate-900 shadow-md z-10">
+                  {unread > 9 ? "9+" : unread}
                 </span>
               ) : null}
             </Link>
@@ -529,12 +506,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Cart Button */}
             <Link
               to="/cart"
-              className="relative flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-black text-white shadow-xs transition-transform hover:scale-105"
+              className="relative flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 via-[#00BCD4] to-emerald-400 hover:opacity-95 px-3 py-1.5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/30 transition-transform hover:scale-105"
             >
-              <FiShoppingCart className="size-3.5" />
+              <FiShoppingCart className="size-4" />
               <span className="hidden sm:inline">Cart</span>
               {count > 0 ? (
-                <span className="grid min-w-4 h-4 place-items-center rounded-full bg-white px-1 text-[10px] font-black text-emerald-700 shadow-2xs">
+                <span className="grid min-w-4 h-4 place-items-center rounded-full bg-slate-950 px-1 text-[10px] font-black text-cyan-300 shadow-2xs">
                   {count}
                 </span>
               ) : null}
@@ -543,7 +520,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Profile Avatar Button */}
             <Link
               to="/account"
-              className="grid size-8 place-items-center rounded-full bg-emerald-100 text-emerald-700 font-extrabold text-xs border border-emerald-300/60 shadow-2xs hover:scale-105 transition-transform"
+              className="grid size-9 place-items-center rounded-full bg-gradient-to-tr from-cyan-400 to-[#044D63] text-white font-extrabold text-xs border-2 border-white/40 shadow-md hover:scale-105 transition-transform"
               title={userName}
             >
               {userInitial}
