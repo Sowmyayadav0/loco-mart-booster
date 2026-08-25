@@ -1,513 +1,693 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiArrowRight,
+  FiCalendar,
   FiCheck,
   FiChevronLeft,
   FiChevronRight,
   FiClock,
+  FiCpu,
+  FiFilter,
+  FiHeart,
+  FiHelpCircle,
+  FiInfo,
+  FiMapPin,
   FiPlus,
+  FiSearch,
+  FiShield,
   FiStar,
+  FiTag,
   FiTruck,
+  FiUsers,
+  FiX,
   FiZap,
 } from "react-icons/fi";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
-import { useCartActions } from "@/hooks/useCart";
+import { currency } from "@/utils/format";
 import { ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
-import { StoreCard } from "@/components/shop/StoreCard";
+import { navaStore } from "@/lib/navaStore";
+import {
+  BHIMAVARAM_CATEGORIES,
+  BHIMAVARAM_RESTAURANTS,
+  MOOD_OPTIONS,
+  ALL_BHIMAVARAM_DISHES,
+  type FoodDish,
+  type FoodRestaurant,
+} from "./bhimavaramFoodData";
 
-// Comprehensive authentic cuisine & food categories for "What's on your mind?"
-const FOOD_CUISINE_CATEGORIES = [
-  { name: "Biryani", img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=300&q=80" },
-  { name: "Pizzas", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=300&q=80" },
-  { name: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80" },
-  { name: "Dosas", img: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=300&q=80" },
-  { name: "North Indian", img: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=300&q=80" },
-  { name: "Chinese", img: "https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=300&q=80" },
-  { name: "Kebabs", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80" },
-  { name: "Rolls", img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=300&q=80" },
-  { name: "Thalis", img: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=300&q=80" },
-  { name: "Idli & Vada", img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=300&q=80" },
-  { name: "Sandwiches", img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=300&q=80" },
-  { name: "Pasta", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=300&q=80" },
-  { name: "Haleem", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80" },
-  { name: "Shakes", img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=300&q=80" },
-  { name: "Cakes", img: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=300&q=80" },
-  { name: "Coffee & Tea", img: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=300&q=80" },
-  { name: "Chaat & Samosa", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=300&q=80" },
-  { name: "Seafood", img: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80" },
-  { name: "Salads", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=300&q=80" },
-  { name: "Desserts", img: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=300&q=80" },
-];
+import { DishCustomizerModal } from "./DishCustomizerModal";
+import { AIFoodAssistantModal } from "./AIFoodAssistantModal";
+import { RestaurantDetailModal } from "./RestaurantDetailModal";
+import { SurpriseMeModal } from "./SurpriseMeModal";
+import { PartyPlannerModal } from "./PartyPlannerModal";
+import { GroupOrderModal } from "./GroupOrderModal";
+import { ScheduleOrderModal } from "./ScheduleOrderModal";
+import { HealthModeModal } from "./HealthModeModal";
+import { SmartFoodCartDrawer, type FoodCartItem } from "./SmartFoodCartDrawer";
+import { LiveFoodTrackingModal } from "./LiveFoodTrackingModal";
+import { FoodSupportModal } from "./FoodSupportModal";
 
 export function FoodHubView() {
   const navigate = useNavigate();
-  const { addToCart } = useCartActions();
-  const cuisineScrollRef = useRef<HTMLDivElement>(null);
+  const activeLocation = navaStore.getActiveLocation() || "Narasa Agraharam, Bhimavaram";
 
-  // Transient animated feedback state for clicked product IDs
-  const [justAddedId, setJustAddedId] = useState<string | null>(null);
+  // Navigation & Language State
+  const [language, setLanguage] = useState<"en" | "te">("en");
 
-  // Mouse drag-to-scroll support for desktop
-  const isDraggingRef = useRef(false);
-  const startXRef = useRef(0);
-  const scrollLeftRef = useRef(0);
-
-  // Load authentic restaurants from API
-  const storesQuery = useQuery({
-    queryKey: ["stores", "food"],
-    queryFn: () => api.stores("food"),
+  // Search & Filters State
+  const [universalSearch, setUniversalSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeMood, setActiveMood] = useState<string>("all");
+  const [smartFilters, setSmartFilters] = useState({
+    under200: false,
+    pureVeg: false,
+    nonVeg: false,
+    spicy: false,
+    topRated: false,
+    fastDelivery: false,
   });
-  const restaurants = storesQuery.data ?? [];
 
-  // Flash Deals Countdown Timer (02:15:00)
-  const [timeLeft, setTimeLeft] = useState(8100);
+  // Modal Open States
+  const [customizerDish, setCustomizerDish] = useState<FoodDish | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodRestaurant | null>(null);
+  const [isAIOpen, setIsAIOpen] = useState(false);
+  const [isSurpriseOpen, setIsSurpriseOpen] = useState(false);
+  const [isPartyOpen, setIsPartyOpen] = useState(false);
+  const [isGroupOrderOpen, setIsGroupOrderOpen] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [isHealthOpen, setIsHealthOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isLiveTrackingOpen, setIsLiveTrackingOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 8100));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Cart State
+  const [cartItems, setCartItems] = useState<FoodCartItem[]>([
+    {
+      id: "init-1",
+      dish: ALL_BHIMAVARAM_DISHES[0]!,
+      qty: 1,
+      spice: "Medium",
+      portion: "Regular",
+      addOns: ["Extra Raita"],
+      notes: "Less spicy salan please",
+    },
+  ]);
 
-  const formatTimer = (sec: number) => {
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = sec % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  const totalCartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
+  const cartSubtotal = cartItems.reduce((sum, item) => sum + item.dish.price * item.qty, 0);
+
+  // Filter Restaurants & Dishes dynamically
+  const filteredRestaurants = useMemo(() => {
+    return BHIMAVARAM_RESTAURANTS.filter((rest) => {
+      // Smart filters
+      if (smartFilters.pureVeg && !rest.pureVeg) return false;
+      if (smartFilters.topRated && rest.rating < 4.8) return false;
+      if (smartFilters.fastDelivery && rest.deliveryMins > 20) return false;
+
+      // Category filter
+      if (activeCategory !== "all") {
+        const hasCategoryDish = rest.dishes.some((d) => d.category === activeCategory);
+        if (!hasCategoryDish) return false;
+      }
+
+      // Mood filter
+      if (activeMood !== "all") {
+        if (activeMood === "spicy" && !rest.cuisines.some((c) => c.toLowerCase().includes("andhra") || c.toLowerCase().includes("biryani"))) return false;
+        if (activeMood === "comfort" && !rest.veg) return false;
+        if (activeMood === "fast" && rest.deliveryMins > 18) return false;
+        if (activeMood === "budget" && rest.priceRange !== "₹") return false;
+      }
+
+      // Universal search
+      if (universalSearch.trim()) {
+        const q = universalSearch.toLowerCase();
+        const matchesName = rest.name.toLowerCase().includes(q) || rest.teluguName.includes(q);
+        const matchesCuisine = rest.cuisines.some((c) => c.toLowerCase().includes(q));
+        const matchesDish = rest.dishes.some((d) => d.name.toLowerCase().includes(q) || d.teluguName.includes(q));
+        return matchesName || matchesCuisine || matchesDish;
+      }
+
+      return true;
+    });
+  }, [activeCategory, activeMood, smartFilters, universalSearch]);
+
+  const handleAddToCart = (
+    dish: FoodDish,
+    qty: number,
+    customizedOptions: { spice: string; portion: string; addOns: string[]; notes: string }
+  ) => {
+    const newItem: FoodCartItem = {
+      id: `${dish.id}-${Date.now()}`,
+      dish,
+      qty,
+      spice: customizedOptions.spice,
+      portion: customizedOptions.portion,
+      addOns: customizedOptions.addOns,
+      notes: customizedOptions.notes,
+    };
+    setCartItems((prev) => [...prev, newItem]);
   };
 
-  const scrollCuisines = (direction: "left" | "right") => {
-    if (cuisineScrollRef.current) {
-      const offset = direction === "left" ? -320 : 320;
-      cuisineScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+  const handleUpdateQty = (itemId: string, newQty: number) => {
+    if (newQty <= 0) {
+      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    } else {
+      setCartItems((prev) =>
+        prev.map((item) => (item.id === itemId ? { ...item, qty: newQty } : item))
+      );
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const el = cuisineScrollRef.current;
-    if (!el) return;
-    isDraggingRef.current = true;
-    startXRef.current = e.pageX - el.offsetLeft;
-    scrollLeftRef.current = el.scrollLeft;
+  const handleOrderPartyPack = (items: { dish: FoodDish; qty: number }[]) => {
+    const newItems: FoodCartItem[] = items.map((i) => ({
+      id: `${i.dish.id}-party-${Date.now()}`,
+      dish: i.dish,
+      qty: i.qty,
+      spice: "Medium",
+      portion: "Party Size",
+      addOns: [],
+      notes: "Party Pack Order",
+    }));
+    setCartItems((prev) => [...prev, ...newItems]);
+    setIsCartOpen(true);
   };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingRef.current) return;
-    const el = cuisineScrollRef.current;
-    if (!el) return;
-    e.preventDefault();
-    const x = e.pageX - el.offsetLeft;
-    const walk = (x - startXRef.current) * 1.5;
-    el.scrollLeft = scrollLeftRef.current - walk;
-  };
-
-  const handleMouseUpOrLeave = () => {
-    isDraggingRef.current = false;
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    const el = cuisineScrollRef.current;
-    if (el && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      el.scrollLeft += e.deltaY;
-    }
-  };
-
-  function handleQuickAdd(productId: string, dishName: string) {
-    addToCart(productId, 1);
-    setJustAddedId(productId);
-    toast.success(`Added ${dishName} to cart!`);
-    setTimeout(() => setJustAddedId(null), 1200);
-  }
-
-  function handleReorder() {
-    handleQuickAdd("p-1", "Hyderabadi Chicken Dum Biryani");
-  }
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 py-6 select-none">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:py-8 text-slate-900 dark:text-white select-none">
       {/* 1. TOP SERVICE CATEGORY SWITCHER */}
       <ServiceCategorySwitcher activeService="food" />
 
-      {/* 2. HERO PROMOTIONAL 3D BANNER CARD (50% OFF) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-[#034254] to-teal-950 text-white p-6 sm:p-10 border-t-2 border-l border-white/30 border-b-[4px] border-r-2 border-slate-950 shadow-xl shadow-cyan-950/30 select-none transform-gpu transition-transform duration-300 hover:scale-[1.008]">
-        {/* Dynamic Specular Laser Sheen Sweep */}
-        <div className="absolute inset-0 -translate-x-full hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 pointer-events-none" />
-
-        {/* Ambient Underglow Core */}
-        <div className="absolute -right-10 -bottom-10 size-60 rounded-full bg-cyan-500/20 blur-2xl pointer-events-none" />
-
-        <div
-          className="absolute inset-0 opacity-20 mix-blend-overlay pointer-events-none"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-
-        <div className="relative z-10 max-w-lg space-y-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/20 border border-cyan-300/40 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-cyan-200 shadow-xs">
-            <span className="size-2 rounded-full bg-cyan-400 animate-ping" />
-            🔥 Enrolled Partner Special
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-teal-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-            50% OFF
-          </h2>
-          <p className="text-sm sm:text-base font-bold text-slate-200">
-            On your first 3 food orders from top rated restaurants. Delivered in 20-30 mins!
-          </p>
-
-          <div className="pt-2">
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.92, y: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              onClick={() => toast.info("50% discount coupon 'SUPER50' auto-applied at checkout!")}
-              className="h-12 px-8 rounded-full bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:opacity-95 text-slate-950 font-black text-sm border-t border-white/60 border-b-2 border-teal-900 shadow-[0_6px_20px_rgba(0,188,212,0.4)] active:shadow-inner transition-all cursor-pointer touch-manipulation"
-            >
-              ORDER NOW
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. WHAT'S ON YOUR MIND? (SMOOTH HARDWARE-ACCELERATED CAROUSEL) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
+      {/* 2. LOCALIZED FOOD HEADER WITH LOCATION & LANGUAGE SWITCHER */}
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-4">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              What's on your mind?
-            </h2>
-            <span className="text-xs font-bold text-slate-400">({FOOD_CUISINE_CATEGORIES.length} Cuisines)</span>
-          </div>
-
-          {/* Left & Right Smooth Scroll Buttons with Elastic Press Physics */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => scrollCuisines("left")}
-              className="size-8.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 grid place-items-center text-slate-700 dark:text-slate-200 shadow-xs transition-transform active:scale-90 cursor-pointer touch-manipulation"
-              title="Scroll left"
-            >
-              <FiChevronLeft className="size-4.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollCuisines("right")}
-              className="size-8.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 grid place-items-center text-slate-700 dark:text-slate-200 shadow-xs transition-transform active:scale-90 cursor-pointer touch-manipulation"
-              title="Scroll right"
-            >
-              <FiChevronRight className="size-4.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* HORIZONTAL SMOOTH SCROLL CAROUSEL */}
-        <div
-          ref={cuisineScrollRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUpOrLeave}
-          onMouseLeave={handleMouseUpOrLeave}
-          onWheel={handleWheel}
-          className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar py-2 px-1 cursor-grab active:cursor-grabbing touch-pan-x"
-          style={{ WebkitOverflowScrolling: "touch" }}
-        >
-          {FOOD_CUISINE_CATEGORIES.map((cat) => (
-            <div
-              key={cat.name}
-              onClick={() => void navigate({ to: "/search", search: { q: cat.name } })}
-              className="flex flex-col items-center gap-2 group cursor-pointer shrink-0 w-[72px] sm:w-[84px] select-none transform-gpu transition-transform duration-200 hover:-translate-y-1.5 active:scale-95 touch-manipulation"
-            >
-              {/* 3D Porcelain Beveled Lens Chassis */}
-              <div className="relative size-16 sm:size-20">
-                <div className="absolute -bottom-1.5 inset-x-1 h-3 rounded-full bg-slate-950/30 blur-xs group-hover:scale-75 group-hover:opacity-40 transition-all duration-300" />
-
-                <div className="relative w-full h-full rounded-full p-0.5 bg-gradient-to-b from-white via-slate-100 to-slate-300 dark:from-slate-700 dark:to-slate-900 shadow-[0_6px_16px_rgba(0,0,0,0.18),inset_0_1.5px_2px_white] group-hover:scale-105 group-hover:shadow-[0_12px_24px_rgba(0,0,0,0.25)] transition-all duration-200">
-                  <div className="relative w-full h-full rounded-full overflow-hidden shadow-inner bg-slate-100 dark:bg-slate-800">
-                    <img
-                      src={cat.img}
-                      alt={cat.name}
-                      loading="lazy"
-                      className="size-full object-cover group-hover:scale-115 transition-transform duration-300 pointer-events-none"
-                    />
-
-                    {/* Specular dynamic shifting glaze lens */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-white/45 pointer-events-none rounded-full" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Cuisine Name Label */}
-              <span className="relative z-10 text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-100 tracking-tight text-center truncate w-full group-hover:text-cyan-500 transition-colors duration-200">
-                {cat.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. TRENDING POPULAR RESTAURANTS (ACTUAL RESTAURANT STORE CARDS) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-600 dark:text-orange-400 text-sm font-black shadow-xs">
-              🔥
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {language === "en" ? "DELIVERING TO" : "డెలివరీ చిరునామా"}
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Trending Restaurants
+            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              ● {language === "en" ? "Bhimavaram Hub" : "భీమవరం"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <FiMapPin className="size-4 text-emerald-600 shrink-0" />
+            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate max-w-sm">
+              📍 {activeLocation}
             </h2>
           </div>
-          <Link
-            to="/search"
-            search={{ q: "" }}
-            className="text-xs font-black text-cyan-600 dark:text-cyan-400 hover:underline active:opacity-70 transition-opacity cursor-pointer"
+        </div>
+
+        {/* TOP QUICK ACTION TOOLS */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* LANGUAGE TOGGLE */}
+          <button
+            type="button"
+            onClick={() => setLanguage(language === "en" ? "te" : "en")}
+            className="px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 text-xs font-black hover:bg-slate-200 transition-colors cursor-pointer"
           >
-            SEE ALL ({restaurants.length})
-          </Link>
+            {language === "en" ? "🌐 తెలుగు" : "🌐 English"}
+          </button>
+
+          {/* LIVE TRACKING BADGE */}
+          <button
+            type="button"
+            onClick={() => setIsLiveTrackingOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 text-xs font-black text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500 hover:text-white transition-all cursor-pointer shadow-2xs"
+          >
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Track Order (8:12 PM)</span>
+          </button>
+        </div>
+      </header>
+
+      {/* 3. UNIVERSAL FOOD SEARCH WITH NATURAL LANGUAGE ASSISTANT */}
+      <section className="space-y-3">
+        <div className="relative flex items-center">
+          <FiSearch className="absolute left-4 size-5 text-slate-400" />
+          <input
+            type="text"
+            value={universalSearch}
+            onChange={(e) => setUniversalSearch(e.target.value)}
+            placeholder={
+              language === "en"
+                ? "🔍 What are you craving in Bhimavaram? (e.g. Chicken Biryani, Ghee Dosa, Prawns Fry, Under ₹200)"
+                : "🔍 మీరు ఏమి తినాలనుకుంటున్నారు? (చికెన్ బిర్యానీ, నెయ్యి కారం దోశ, రొయ్యల వేపుడు)"
+            }
+            className="w-full h-14 pl-12 pr-32 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 shadow-xl dark:shadow-none transition-all placeholder:text-slate-400"
+          />
+
+          <div className="absolute right-2 flex items-center gap-1.5">
+            {universalSearch && (
+              <button
+                type="button"
+                onClick={() => setUniversalSearch("")}
+                className="size-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold mr-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsAIOpen(true)}
+              className="h-10 px-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105"
+            >
+              <FiZap className="size-3.5" />
+              <span className="hidden sm:inline">Ask AI</span>
+            </button>
+          </div>
         </div>
 
-        {/* Real Restaurants Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {restaurants.slice(0, 8).map((store) => (
-            <StoreCard key={store.id} store={store} />
+        {/* INSTANT NATURAL LANGUAGE QUERY CHIPS */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
+          <span className="text-[10px] font-black uppercase text-slate-400 shrink-0">Popular:</span>
+          {[
+            "Chicken Biryani",
+            "Ghee Karam Dosa",
+            "Bhimavaram Prawns Fry",
+            "Food Under ₹200",
+            "High Protein",
+            "Godavari Sweets",
+          ].map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => setUniversalSearch(tag)}
+              className="rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 px-3 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:bg-emerald-500/10 transition-colors whitespace-nowrap cursor-pointer"
+            >
+              {tag}
+            </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* 5. POPULAR DISHES NEAR YOU (COMPACT 4-PER-ROW GRID WITH TACTILE POP BUTTONS) */}
-      <div className="space-y-3">
+      {/* 4. QUICK FOOD CATEGORIES (HORIZONTAL CARDS WITH HIGH-RES IMAGES) */}
+      <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="grid size-6 place-items-center rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-xs font-black shadow-xs">
-              🍛
-            </span>
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              Popular Dishes Near You
-            </h2>
-          </div>
-          <span className="text-xs font-bold text-slate-400">Quick 1-Tap Add</span>
+          <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+            {language === "en" ? "Explore Bhimavaram Cuisines" : "భీమవరం రుచులు"}
+          </h2>
+          <span className="text-xs font-bold text-slate-400">
+            {BHIMAVARAM_CATEGORIES.length} Categories
+          </span>
         </div>
 
-        {/* COMPACT 4-PER-ROW GRID (4 on top row, 4 on bottom row) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-          {[
-            {
-              id: "tr-1",
-              productId: "p-1",
-              name: "Dum Biryani",
-              price: 289,
-              restaurant: "Bawarchi",
-              rating: 4.9,
-              img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-2",
-              productId: "p-2",
-              name: "Butter Masala",
-              price: 249,
-              restaurant: "Sri Kanya",
-              rating: 4.8,
-              img: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-3",
-              productId: "p-3",
-              name: "Special Haleem",
-              price: 320,
-              restaurant: "Pista House",
-              rating: 4.9,
-              img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-4",
-              productId: "p-4",
-              name: "Ghee Dosa",
-              price: 119,
-              restaurant: "Chaitanya",
-              rating: 4.7,
-              img: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-5",
-              productId: "p-5",
-              name: "Smoky Burger",
-              price: 189,
-              restaurant: "Leon's",
-              rating: 4.8,
-              img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-6",
-              productId: "p-6",
-              name: "Farmhouse Pizza",
-              price: 299,
-              restaurant: "La Pino'z",
-              rating: 4.6,
-              img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-7",
-              productId: "p-7",
-              name: "Paneer Thali",
-              price: 219,
-              restaurant: "Santosh Dhaba",
-              rating: 4.7,
-              img: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=300&q=80",
-            },
-            {
-              id: "tr-8",
-              productId: "p-8",
-              name: "Thick Shake",
-              price: 169,
-              restaurant: "Thick Shake Co",
-              rating: 4.9,
-              img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=300&q=80",
-            },
-          ].map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-2 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md transition-all duration-200 group relative select-none transform-gpu"
-            >
-              {/* Mini Food Photo */}
-              <div className="relative size-12 sm:size-14 rounded-xl overflow-hidden shrink-0 bg-slate-800">
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
+          {BHIMAVARAM_CATEGORIES.map((cat) => {
+            const isSelected = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(isSelected ? "all" : cat.id)}
+                className={`flex flex-col items-center p-2.5 rounded-3xl border transition-all cursor-pointer shrink-0 w-24 sm:w-28 group ${
+                  isSelected
+                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 shadow-md ring-2 ring-emerald-500/30"
+                    : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-emerald-500/50"
+                }`}
+              >
                 <img
-                  src={item.img}
-                  alt={item.name}
-                  loading="lazy"
-                  className="size-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  src={cat.img}
+                  alt={cat.name}
+                  className="size-14 sm:size-16 rounded-2xl object-cover shadow-2xs group-hover:scale-105 transition-transform"
                 />
-              </div>
+                <span className="text-xs font-black text-slate-900 dark:text-white mt-2 text-center line-clamp-1">
+                  {language === "en" ? cat.name : cat.teluguName}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
-              {/* Details (Name, Restaurant, Price) */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-xs sm:text-[13px] text-slate-900 dark:text-white truncate leading-tight group-hover:text-cyan-500 transition-colors">
-                  {item.name}
-                </h3>
-                <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 truncate mt-0.5">
-                  {item.restaurant}
-                </p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400">
-                    ₹{item.price}
-                  </span>
-                  <div className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
-                    <FiStar className="size-2.5 fill-current" />
-                    <span>{item.rating}</span>
+      {/* 5. MOOD / INTENT DISCOVERY CHIPS */}
+      <section className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-xl dark:shadow-none space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+              {language === "en" ? "What are you in the mood for?" : "ఈరోజు మీ మూడ్ ఏమిటి?"}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Tap any mood to dynamically adjust food recommendations.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          {MOOD_OPTIONS.map((mood) => {
+            const isSelected = activeMood === mood.id;
+            return (
+              <button
+                key={mood.id}
+                type="button"
+                onClick={() => setActiveMood(isSelected ? "all" : mood.id)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                  isSelected
+                    ? "border-emerald-500 bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                    : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
+                }`}
+              >
+                <span>{mood.emoji}</span>
+                <span>{mood.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 6. SPECIAL FEATURE TOOLS GRID (Surprise Me, Party, Group, Schedule, Health, Support) */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        {[
+          { id: "surprise", label: "✨ Surprise Me", desc: "AI pick", color: "from-amber-500 to-orange-600", onClick: () => setIsSurpriseOpen(true) },
+          { id: "party", label: "🎉 Party Planner", desc: "Bulk meals", color: "from-purple-600 to-indigo-600", onClick: () => setIsPartyOpen(true) },
+          { id: "group", label: "👥 Group Order", desc: "Split basket", color: "from-blue-600 to-cyan-600", onClick: () => setIsGroupOrderOpen(true) },
+          { id: "schedule", label: "⏰ Schedule", desc: "Future meals", color: "from-emerald-600 to-teal-600", onClick: () => setIsScheduleOpen(true) },
+          { id: "health", label: "🥗 Eat Better", desc: "High protein", color: "from-teal-600 to-emerald-700", onClick: () => setIsHealthOpen(true) },
+          { id: "support", label: "🎧 24/7 Support", desc: "Local help", color: "from-slate-800 to-slate-900", onClick: () => setIsSupportOpen(true) },
+        ].map((tool) => (
+          <button
+            key={tool.id}
+            type="button"
+            onClick={tool.onClick}
+            className="p-3.5 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-emerald-500 hover:shadow-lg transition-all text-left space-y-1 cursor-pointer group"
+          >
+            <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              {tool.label}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{tool.desc}</div>
+          </button>
+        ))}
+      </section>
+
+      {/* 7. SMART CONTEXTUAL FILTERS */}
+      <section className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
+        <span className="text-[10px] font-black uppercase text-slate-400 shrink-0">Filters:</span>
+        <button
+          type="button"
+          onClick={() => setSmartFilters({ ...smartFilters, under200: !smartFilters.under200 })}
+          className={`px-3 py-1.5 rounded-full border font-bold transition-all cursor-pointer ${
+            smartFilters.under200
+              ? "border-emerald-500 bg-emerald-500 text-white"
+              : "border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          Under ₹200
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSmartFilters({ ...smartFilters, pureVeg: !smartFilters.pureVeg })}
+          className={`px-3 py-1.5 rounded-full border font-bold transition-all cursor-pointer ${
+            smartFilters.pureVeg
+              ? "border-emerald-500 bg-emerald-500 text-white"
+              : "border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          Pure Veg 🟢
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSmartFilters({ ...smartFilters, topRated: !smartFilters.topRated })}
+          className={`px-3 py-1.5 rounded-full border font-bold transition-all cursor-pointer ${
+            smartFilters.topRated
+              ? "border-emerald-500 bg-emerald-500 text-white"
+              : "border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          4.8+ Rated ⭐
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSmartFilters({ ...smartFilters, fastDelivery: !smartFilters.fastDelivery })}
+          className={`px-3 py-1.5 rounded-full border font-bold transition-all cursor-pointer ${
+            smartFilters.fastDelivery
+              ? "border-emerald-500 bg-emerald-500 text-white"
+              : "border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          Fast Delivery ⚡ (&lt;20m)
+        </button>
+      </section>
+
+      {/* 8. RESTAURANTS & DISHES DISCOVERY LIST */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+              {language === "en" ? "Bhimavaram Food Picks & Restaurants" : "భీమవరం రెస్టారెంట్లు"}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Authentic local favorites, zero surge pricing, verified hygiene standards.
+            </p>
+          </div>
+          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+            {filteredRestaurants.length} Kitchens Open
+          </span>
+        </div>
+
+        {/* RESTAURANT CARDS GRID */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {filteredRestaurants.map((rest) => (
+            <motion.div
+              key={rest.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 overflow-hidden shadow-xl dark:shadow-none hover:border-emerald-500/50 transition-all flex flex-col justify-between"
+            >
+              <div>
+                {/* RESTAURANT BANNER */}
+                <div
+                  onClick={() => setSelectedRestaurant(rest)}
+                  className="relative h-44 w-full overflow-hidden cursor-pointer group"
+                >
+                  <img
+                    src={rest.banner}
+                    alt={rest.name}
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
+
+                  {/* PROMO OFFER BADGE */}
+                  <div className="absolute top-3 left-3 bg-emerald-600 text-white text-[11px] font-black px-2.5 py-1 rounded-xl shadow-md flex items-center gap-1">
+                    <FiTag className="size-3" />
+                    <span>{rest.offer}</span>
+                  </div>
+
+                  {/* ETA BADGE */}
+                  <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-xs text-white text-xs font-black px-3 py-1 rounded-xl">
+                    ⏱️ {rest.deliveryMins} mins · {rest.distanceKm} km
+                  </div>
+                </div>
+
+                {/* RESTAURANT CONTENT */}
+                <div className="p-5 space-y-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3
+                          onClick={() => setSelectedRestaurant(rest)}
+                          className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight hover:text-emerald-600 cursor-pointer"
+                        >
+                          {rest.name}
+                        </h3>
+                        {rest.veg && (
+                          <span className="size-3 rounded-full bg-emerald-500 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                        {rest.cuisines.join(" • ")} · 📍 {rest.area}
+                      </p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg text-xs font-black text-amber-700 dark:text-amber-300">
+                        <FiStar className="fill-amber-500 text-amber-500 size-3" /> {rest.rating}
+                      </span>
+                      <span className="block text-[10px] text-slate-400 font-bold mt-0.5">
+                        {rest.ratingCount}+ ratings
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* WHY WE RECOMMEND THIS (INTELLIGENCE LAYER) */}
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-white/10 space-y-1 text-xs">
+                    <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 block">
+                      Why we recommend this:
+                    </span>
+                    <p className="text-slate-700 dark:text-slate-300 font-bold text-[11px]">
+                      ✓ {rest.recommendationReason[0]}
+                    </p>
+                  </div>
+
+                  {/* POPULAR DISHES MINI CAROUSEL */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 block">
+                      Popular Dishes
+                    </span>
+                    <div className="space-y-2">
+                      {rest.dishes.slice(0, 2).map((dish) => (
+                        <div
+                          key={dish.id}
+                          className="flex items-center justify-between p-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-white/5 text-xs font-bold"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <span
+                              className={`size-2 rounded-full ${
+                                dish.veg ? "bg-emerald-500" : "bg-rose-500"
+                              }`}
+                            />
+                            <span className="text-slate-900 dark:text-white truncate">
+                              {dish.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="font-black text-slate-900 dark:text-white">
+                              {currency(dish.price)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setCustomizerDish(dish)}
+                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-2xs cursor-pointer"
+                            >
+                              + ADD
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* 1-Tap Tactile Quick Add '+' Button */}
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.8 }}
-                onClick={() => handleQuickAdd(item.productId, item.name)}
-                className={`size-7 sm:size-8 rounded-full grid place-items-center shrink-0 cursor-pointer shadow-xs border transition-colors duration-200 ${
-                  justAddedId === item.productId
-                    ? "bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/40"
-                    : "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/40 hover:bg-cyan-500 hover:text-white"
-                }`}
-                title="Add to cart"
-              >
-                {justAddedId === item.productId ? (
-                  <motion.div
-                    initial={{ scale: 0, rotate: -45 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 600, damping: 20 }}
-                  >
-                    <FiCheck className="size-3.5 sm:size-4 stroke-[3]" />
-                  </motion.div>
-                ) : (
-                  <FiPlus className="size-3.5 sm:size-4 stroke-[2.5]" />
-                )}
-              </motion.button>
-            </div>
+              {/* VIEW FULL MENU BUTTON */}
+              <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRestaurant(rest)}
+                  className="w-full h-11 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-800 dark:text-slate-200 hover:border-emerald-500 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>Explore Full Menu ({rest.dishes.length} items)</span>
+                  <FiArrowRight className="size-3.5" />
+                </button>
+              </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* 6. FLASH DEALS BANNER (UP TO 60% OFF) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-600 via-rose-600 to-amber-600 text-white p-6 sm:p-8 shadow-xl shadow-orange-600/20 select-none">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-20 -mt-20" />
+      {/* 9. FLOATING BOTTOM CART BAR (ZOMATO / SWIGGY STYLE) */}
+      <AnimatePresence>
+        {totalCartCount > 0 && (
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            className="fixed bottom-4 left-4 right-4 max-w-xl mx-auto z-40"
+          >
+            <div
+              onClick={() => setIsCartOpen(true)}
+              className="p-4 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xl shadow-emerald-600/40 flex items-center justify-between cursor-pointer transform hover:scale-[1.01] transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid size-10 place-items-center rounded-2xl bg-white/20 font-black text-sm">
+                  {totalCartCount}
+                </span>
+                <div>
+                  <span className="block text-xs font-bold opacity-90 uppercase tracking-wider">
+                    {totalCartCount} Item{totalCartCount > 1 ? "s" : ""} Added
+                  </span>
+                  <span className="text-base font-black">{currency(cartSubtotal)}</span>
+                </div>
+              </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-black uppercase tracking-wider">
-              <FiZap className="size-3.5 fill-current text-yellow-300" />
-              <span>Flash Deals Ending Soon</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
-              Up to 60% OFF Top Cuisines
-            </h2>
-            <p className="text-sm font-bold text-white/90">
-              Limited time offers on Biryanis, Pizzas, Desserts and Burgers.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Live Clock Timer */}
-            <div className="flex items-center gap-2 bg-slate-950/40 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl">
-              <FiClock className="size-4 text-amber-300 animate-spin" style={{ animationDuration: "8s" }} />
-              <div className="font-mono font-black text-base sm:text-lg tracking-wider text-amber-300">
-                {formatTimer(timeLeft)}
+              <div className="flex items-center gap-2 font-black text-sm">
+                <span>View Cart & Checkout</span>
+                <FiArrowRight className="size-4.5" />
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.92 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              onClick={() => void navigate({ to: "/offers" })}
-              className="h-11 px-6 rounded-full bg-white text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-amber-100 transition-colors shadow-lg active:scale-95 cursor-pointer touch-manipulation"
-            >
-              Grab Deals
-            </motion.button>
-          </div>
-        </div>
-      </div>
+      {/* ALL CONNECTED MODALS */}
+      <DishCustomizerModal
+        dish={customizerDish}
+        isOpen={Boolean(customizerDish)}
+        onClose={() => setCustomizerDish(null)}
+        onAddToCart={handleAddToCart}
+      />
 
-      {/* 7. PREVIOUS ORDER REORDER CARD */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 select-none">
-        <div className="flex items-center gap-4">
-          <div className="size-14 sm:size-16 rounded-2xl overflow-hidden bg-slate-800 shrink-0">
-            <img
-              src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=300&q=80"
-              alt="Previous order"
-              className="size-full object-cover"
-            />
-          </div>
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Order Again
-            </span>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-              Hyderabadi Chicken Dum Biryani
-            </h3>
-            <p className="text-xs font-bold text-slate-400">
-              Bawarchi Restaurant • ₹289 • Delivered yesterday
-            </p>
-          </div>
-        </div>
+      <RestaurantDetailModal
+        restaurant={selectedRestaurant}
+        isOpen={Boolean(selectedRestaurant)}
+        onClose={() => setSelectedRestaurant(null)}
+        onSelectDish={(dish) => setCustomizerDish(dish)}
+      />
 
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={handleReorder}
-          className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md shadow-cyan-500/30 transition-colors cursor-pointer touch-manipulation"
-        >
-          REORDER
-        </motion.button>
-      </div>
+      <AIFoodAssistantModal
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+        onSelectDish={(dish) => setCustomizerDish(dish)}
+        onOpenRestaurant={(restId) => {
+          const rest = BHIMAVARAM_RESTAURANTS.find((r) => r.id === restId);
+          if (rest) setSelectedRestaurant(rest);
+        }}
+      />
+
+      <SurpriseMeModal
+        isOpen={isSurpriseOpen}
+        onClose={() => setIsSurpriseOpen(false)}
+        onOrderDish={(dish) => setCustomizerDish(dish)}
+      />
+
+      <PartyPlannerModal
+        isOpen={isPartyOpen}
+        onClose={() => setIsPartyOpen(false)}
+        onOrderPartyPack={handleOrderPartyPack}
+      />
+
+      <GroupOrderModal
+        isOpen={isGroupOrderOpen}
+        onClose={() => setIsGroupOrderOpen(false)}
+      />
+
+      <ScheduleOrderModal
+        isOpen={isScheduleOpen}
+        onClose={() => setIsScheduleOpen(false)}
+        onConfirmSchedule={(slot) => {
+          toast.success(`Delivery scheduled for ${slot}`);
+        }}
+      />
+
+      <HealthModeModal
+        isOpen={isHealthOpen}
+        onClose={() => setIsHealthOpen(false)}
+        onSelectDish={(dish) => setCustomizerDish(dish)}
+      />
+
+      <SmartFoodCartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        onUpdateQty={handleUpdateQty}
+        onCheckout={() => {
+          setIsLiveTrackingOpen(true);
+        }}
+      />
+
+      <LiveFoodTrackingModal
+        isOpen={isLiveTrackingOpen}
+        onClose={() => setIsLiveTrackingOpen(false)}
+      />
+
+      <FoodSupportModal
+        isOpen={isSupportOpen}
+        onClose={() => setIsSupportOpen(false)}
+      />
     </div>
   );
 }

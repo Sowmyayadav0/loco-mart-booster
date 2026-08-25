@@ -39,21 +39,21 @@ function CourierPage() {
   const price = Math.round((35 + km * 9 + weight * 6) * pkgType.multiplier * speedType.multiplier);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-6 sm:py-8 text-foreground">
+    <div className="mx-auto max-w-4xl space-y-8 px-4 py-6 sm:py-8 text-slate-900 dark:text-white">
       {/* 1. TOP SERVICE CATEGORY SWITCHER */}
       <ServiceCategorySwitcher activeService="courier" />
       <header>
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-foreground">Send a parcel</h1>
-        <p className="mt-1 text-muted-foreground text-sm sm:text-base">Doorstep pickup in minutes. Pay only for the distance you send.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900 dark:text-white">Send a parcel</h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm sm:text-base">Doorstep pickup in minutes. Pay only for the distance you send.</p>
       </header>
 
-      <section className="space-y-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 p-5 shadow-xs">
-        <label className="block text-sm font-semibold text-foreground">Pickup address</label>
+      <section className="space-y-3 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-md dark:shadow-none">
+        <label className="block text-sm font-extrabold text-slate-900 dark:text-white">Pickup address</label>
         <textarea
           value={pickup}
           onChange={(e) => setPickup(e.target.value)}
           rows={2}
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 p-3 text-sm text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 p-3.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
         />
         <div className="flex flex-wrap gap-2">
           {SAVED_PLACES.map((p) => (
@@ -61,45 +61,45 @@ function CourierPage() {
               key={p.id}
               type="button"
               onClick={() => setPickup(p.address)}
-              className="rounded-full border border-slate-200 dark:border-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs font-semibold text-foreground hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+              className="rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               {p.label}
             </button>
           ))}
         </div>
 
-        <label className="block pt-2 text-sm font-semibold text-foreground">Drop address</label>
+        <label className="block pt-2 text-sm font-extrabold text-slate-900 dark:text-white">Drop address</label>
         <textarea
           value={drop}
           onChange={(e) => setDrop(e.target.value)}
           rows={2}
           placeholder="Where should we deliver it?"
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 p-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 p-3.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
         />
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-foreground">What are you sending?</h2>
+        <h2 className="mb-3 text-lg font-extrabold text-slate-900 dark:text-white">What are you sending?</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {PACKAGE_TYPES.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => setPkg(p.id)}
-              className={`rounded-2xl border p-4 text-left transition-all ${
+              className={`rounded-2xl border p-4 text-left transition-all cursor-pointer ${
                 pkg === p.id
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-950 dark:text-emerald-300 ring-2 ring-emerald-500/30"
-                  : "border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-foreground"
+                  ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-950 dark:text-emerald-300 ring-2 ring-emerald-500/30"
+                  : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white"
               }`}
             >
               <div className="text-2xl">{p.emoji}</div>
-              <div className="mt-1 text-sm font-semibold text-foreground">{p.name}</div>
-              <div className="text-xs text-muted-foreground">{p.desc} · up to {p.maxKg} kg</div>
+              <div className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{p.name}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{p.desc} · up to {p.maxKg} kg</div>
             </button>
           ))}
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <span className="text-sm font-semibold text-foreground">Weight</span>
+          <span className="text-sm font-bold text-slate-900 dark:text-white">Weight</span>
           <input
             type="range"
             min={1}
@@ -108,27 +108,27 @@ function CourierPage() {
             onChange={(e) => setWeight(Number(e.target.value))}
             className="flex-1 accent-emerald-500"
           />
-          <span className="w-14 text-right text-sm text-muted-foreground font-semibold">{Math.min(weight, pkgType.maxKg)} kg</span>
+          <span className="w-14 text-right text-sm text-slate-500 dark:text-slate-400 font-bold">{Math.min(weight, pkgType.maxKg)} kg</span>
         </div>
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-foreground">Delivery speed</h2>
+        <h2 className="mb-3 text-lg font-extrabold text-slate-900 dark:text-white">Delivery speed</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {COURIER_SPEEDS.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => setSpeed(s.id)}
-              className={`rounded-2xl border p-4 text-left transition-all ${
+              className={`rounded-2xl border p-4 text-left transition-all cursor-pointer ${
                 speed === s.id
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-950 dark:text-emerald-300 ring-2 ring-emerald-500/30"
-                  : "border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-foreground"
+                  ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-950 dark:text-emerald-300 ring-2 ring-emerald-500/30"
+                  : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white"
               }`}
             >
-              <div className="text-sm font-semibold text-foreground">{s.name}</div>
-              <div className="text-xs text-muted-foreground">{s.desc}</div>
-              <div className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <div className="text-sm font-bold text-slate-900 dark:text-white">{s.name}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{s.desc}</div>
+              <div className="mt-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 {s.etaMin < 60 ? `${s.etaMin} min` : `${Math.round(s.etaMin / 60)} hrs`}
               </div>
             </button>
@@ -136,50 +136,46 @@ function CourierPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 p-5 shadow-xs">
+      <section className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-md dark:shadow-none space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Distance</span>
-          <span className="font-semibold text-foreground">{drop ? `${km} km` : "—"}</span>
+          <span className="text-slate-500 dark:text-slate-400">Distance</span>
+          <span className="font-bold text-slate-900 dark:text-white">{drop ? `${km} km` : "—"}</span>
         </div>
-        <div className="mt-2 flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Estimated fare</span>
-          <span className="text-lg font-extrabold text-foreground">{drop ? currency(price) : "—"}</span>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-500 dark:text-slate-400">Estimated fare</span>
+          <span className="text-lg font-black text-slate-900 dark:text-white">{drop ? currency(price) : "—"}</span>
         </div>
         <button
           type="button"
           disabled={!drop}
           onClick={() => {
-            const code = `CR${Math.floor(100000 + Math.random() * 899999)}`;
-            setBooked({ code, eta: speedType.etaMin, price });
-            toast.success("Rider assigned — pickup on the way");
+            setBooked({
+              code: "CR-" + Math.floor(1000 + Math.random() * 9000),
+              eta: speedType.etaMin,
+              price,
+            });
+            toast.success("Parcel pickup confirmed!");
           }}
-          className="mt-4 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 py-3 text-sm font-bold text-white disabled:opacity-50 transition-colors shadow-xs"
+          className="mt-2 w-full rounded-2xl bg-emerald-600 disabled:opacity-50 hover:bg-emerald-700 py-3.5 text-sm font-black text-white transition-all cursor-pointer shadow-md"
         >
-          Book pickup
+          Confirm parcel booking
         </button>
       </section>
 
       {booked && (
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/30 p-5"
+          className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-5 space-y-2 text-slate-900 dark:text-white"
         >
-          <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Parcel {booked.code} confirmed</div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Rider arrives for pickup shortly. Estimated delivery in {booked.eta < 60 ? `${booked.eta} minutes` : `${Math.round(booked.eta / 60)} hours`}. Amount payable {currency(booked.price)}.
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">Rider Assigned</span>
+            <span className="rounded-full bg-emerald-500 text-white text-xs px-2.5 py-0.5 font-black">{booked.code}</span>
+          </div>
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            Pickup agent will arrive within {booked.eta} min. Total payable: {currency(booked.price)}.
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              setBooked(null);
-              toast("Pickup cancelled");
-            }}
-            className="mt-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            Cancel pickup
-          </button>
-        </motion.section>
+        </motion.div>
       )}
     </div>
   );

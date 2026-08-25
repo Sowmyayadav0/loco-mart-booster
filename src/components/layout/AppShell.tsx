@@ -19,7 +19,6 @@ import {
   FiMapPin,
   FiMenu,
   FiPackage,
-  FiSearch,
   FiSettings,
   FiShield,
   FiShoppingCart,
@@ -99,7 +98,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [selectedLocation, setSelectedLocation] = useState(() => navaStore.getActiveLocation());
   const [foodDropdownOpen, setFoodDropdownOpen] = useState(true);
   const [shopDropdownOpen, setShopDropdownOpen] = useState(true);
-  const [term, setTerm] = useState("");
 
   const closeSidebar = () => {
     setSidebarOpen(false);
@@ -545,29 +543,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </button>
           </div>
-
-          {/* Center: Search bar (hidden on small screens) */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (term.trim()) void navigate({ to: "/search", search: { q: term.trim() } });
-            }}
-            className="hidden sm:flex flex-1 max-w-sm relative mx-2"
-          >
-            <FiSearch className={cn("pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5", isDark ? "text-slate-400" : "text-slate-500")} />
-            <input
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              placeholder="Search products, stores…"
-              aria-label="Search"
-              className={cn(
-                "h-8 w-full rounded-xl border pl-8 pr-3 text-xs outline-none focus:border-cyan-400/60 transition-all",
-                isDark
-                  ? "bg-white/8 border-white/15 text-white placeholder-slate-400 focus:bg-white/12"
-                  : "bg-slate-100/90 border-slate-200 text-slate-900 placeholder-slate-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20"
-              )}
-            />
-          </form>
 
           {/* Right Header Navigation Icons & Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">

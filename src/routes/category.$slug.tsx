@@ -7,6 +7,7 @@ import { ProductGrid } from "@/components/shop/ProductCard";
 import { StoreCard } from "@/components/shop/StoreCard";
 import { FoodHubView } from "@/components/food/FoodHubView";
 import { ShopHubView } from "@/components/shop/ShopHubView";
+import { CategorySearchBar } from "@/components/common/ServiceCategorySwitcher";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
@@ -64,6 +65,9 @@ function CategoryPage() {
           Browse stores and products for {label} delivered fast to your location.
         </p>
       </header>
+
+      {/* SEARCH BAR UNDER THE BANNER */}
+      <CategorySearchBar placeholder={`Search products and stores in ${label}...`} />
 
       {/* STORES SECTION */}
       {(stores.data ?? []).length > 0 ? (

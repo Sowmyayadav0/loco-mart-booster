@@ -45,41 +45,41 @@ export function LanguageSelectScreen({ onContinue, onBack, initialLang = "en" }:
   }
 
   return (
-    <div className="relative h-screen max-h-screen w-full flex flex-col justify-between px-4 py-4 sm:py-6 bg-[#FAFDFB] select-none overflow-hidden">
+    <div className="relative h-screen max-h-screen w-full flex flex-col justify-between px-4 py-4 sm:py-6 bg-[#FAFDFB] dark:bg-slate-950 text-slate-900 dark:text-white select-none overflow-hidden transition-colors">
       {/* SOFT CYAN AMBIENT RADIAL BACKGROUND */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 opacity-70"
+        className="pointer-events-none absolute inset-0 z-0 opacity-70 dark:opacity-30"
         style={{
           background:
             "radial-gradient(circle at 50% 30%, rgba(180, 240, 245, 0.45) 0%, rgba(224, 247, 250, 0.2) 40%, rgba(250, 253, 251, 0) 75%)",
         }}
       />
 
-      {/* TOP HEADER WITH BACK ARROW (From Image 4) */}
+      {/* TOP HEADER WITH BACK ARROW */}
       <header className="relative z-10 w-full max-w-md mx-auto flex items-center justify-between shrink-0">
         <button
           type="button"
           onClick={onBack}
-          className="p-2 -ml-2 rounded-full text-slate-700 hover:bg-slate-200/50 transition-colors"
+          className="size-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           aria-label="Go Back"
         >
-          <FiArrowLeft className="size-6" />
+          <FiArrowLeft className="size-5" />
         </button>
       </header>
 
       {/* MAIN CONTENT AREA */}
       <main className="relative z-10 my-auto w-full max-w-md mx-auto flex flex-col justify-center space-y-3.5 overflow-hidden">
-        {/* HEADING & SUBTITLE (Exact from Image 1) */}
+        {/* HEADING & SUBTITLE */}
         <div className="text-center space-y-1 shrink-0">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#044D63] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#044D63] dark:text-cyan-400 tracking-tight">
             Choose your language
           </h1>
-          <p className="text-xs text-slate-500 font-semibold">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
             You can always change this later in settings.
           </p>
         </div>
 
-        {/* SCROLLABLE 2-COLUMN LANGUAGE CARDS GRID (Fits screen perfectly) */}
+        {/* SCROLLABLE 2-COLUMN LANGUAGE CARDS GRID */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -94,24 +94,24 @@ export function LanguageSelectScreen({ onContinue, onBack, initialLang = "en" }:
                   type="button"
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelected(lang.code)}
-                  className={`relative flex flex-col justify-between text-left p-3 sm:p-3.5 rounded-2xl border-2 transition-all min-h-[76px] sm:min-h-[84px] ${
+                  className={`relative flex flex-col justify-between text-left p-3 sm:p-3.5 rounded-2xl border-2 transition-all min-h-[76px] sm:min-h-[84px] cursor-pointer ${
                     isActive
-                      ? "border-[#00BCD4] bg-[#EEFBFD] shadow-md shadow-cyan-500/10"
-                      : "border-slate-200/80 bg-white hover:border-cyan-300 shadow-2xs"
+                      ? "border-[#00BCD4] bg-[#EEFBFD] dark:bg-cyan-500/20 shadow-md shadow-cyan-500/10"
+                      : "border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-cyan-300 dark:hover:border-cyan-500/40 shadow-2xs"
                   }`}
                 >
-                  {/* CHECKMARK BADGE FOR SELECTED (From Image 1) */}
+                  {/* CHECKMARK BADGE FOR SELECTED */}
                   {isActive && (
-                    <span className="absolute top-2.5 right-2.5 text-[#00BCD4]">
+                    <span className="absolute top-2.5 right-2.5 text-[#00BCD4] dark:text-cyan-400">
                       <FiCheckCircle className="size-4.5" />
                     </span>
                   )}
 
                   <div>
-                    <span className="text-[11px] font-semibold text-slate-500 block leading-tight">
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block leading-tight">
                       {lang.subLabel}
                     </span>
-                    <span className="text-base sm:text-lg font-black text-slate-900 block mt-0.5 leading-tight">
+                    <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block mt-0.5 leading-tight">
                       {lang.native}
                     </span>
                   </div>
@@ -126,7 +126,7 @@ export function LanguageSelectScreen({ onContinue, onBack, initialLang = "en" }:
           <button
             type="button"
             onClick={handleScrollDownClick}
-            className="flex items-center justify-center gap-1 text-[11px] font-extrabold text-cyan-700 bg-cyan-100/80 hover:bg-cyan-200/80 px-3 py-1 rounded-full w-max mx-auto shadow-2xs transition-all animate-bounce cursor-pointer shrink-0"
+            className="flex items-center justify-center gap-1 text-[11px] font-extrabold text-cyan-700 dark:text-cyan-300 bg-cyan-100/80 dark:bg-cyan-500/20 hover:bg-cyan-200/80 px-3 py-1 rounded-full w-max mx-auto shadow-2xs transition-all animate-bounce cursor-pointer shrink-0"
           >
             <span>Scroll down for more</span>
             <FiChevronDown className="size-3.5" />
@@ -134,12 +134,12 @@ export function LanguageSelectScreen({ onContinue, onBack, initialLang = "en" }:
         )}
       </main>
 
-      {/* FOOTER FIXED CONTINUE BUTTON (Always visible at screen bottom) */}
+      {/* FOOTER FIXED CONTINUE BUTTON */}
       <footer className="relative z-10 w-full max-w-md mx-auto pt-3 shrink-0">
         <button
           type="button"
           onClick={() => onContinue(selected)}
-          className="w-full h-12 sm:h-13 rounded-2xl bg-gradient-to-r from-cyan-400 via-[#00BCD4] to-teal-600 hover:opacity-95 text-white font-extrabold text-base shadow-lg shadow-cyan-500/30 transition-all flex items-center justify-center gap-2"
+          className="w-full h-12 sm:h-13 rounded-2xl bg-gradient-to-r from-cyan-400 via-[#00BCD4] to-teal-600 hover:opacity-95 text-white font-extrabold text-base shadow-lg shadow-cyan-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>Continue</span>
           <FiArrowRight className="size-5" />

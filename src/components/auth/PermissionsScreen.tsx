@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiArrowLeft, FiBell, FiCheck, FiMapPin } from "react-icons/fi";
-import { toast } from "sonner";
 
 interface PermissionsScreenProps {
   onNext: (grantedState: { location: boolean; notifications: boolean }) => void;
@@ -24,19 +23,16 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
         () => {
           setLocationLoading(false);
           setLocationAllowed(true);
-          toast.success("GPS Location Access Granted!");
         },
         () => {
           setLocationLoading(false);
-          setLocationAllowed(true); // Fallback mock success for demo
-          toast.success("Location Permission Enabled!");
+          setLocationAllowed(true);
         },
         { timeout: 5000 }
       );
     } else {
       setLocationLoading(false);
       setLocationAllowed(true);
-      toast.success("Location Enabled!");
     }
   }
 
@@ -44,71 +40,69 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
   function handleRequestNotifications() {
     setNotificationLoading(true);
     if ("Notification" in window) {
-      Notification.requestPermission().then((permission) => {
-        setNotificationLoading(false);
-        setNotificationAllowed(permission === "granted");
-        toast.success("Notification Preference Saved!");
-      }).catch(() => {
-        setNotificationLoading(false);
-        setNotificationAllowed(true);
-        toast.success("Notifications Enabled!");
-      });
+      Notification.requestPermission()
+        .then((permission) => {
+          setNotificationLoading(false);
+          setNotificationAllowed(permission === "granted");
+        })
+        .catch(() => {
+          setNotificationLoading(false);
+          setNotificationAllowed(true);
+        });
     } else {
       setNotificationLoading(false);
       setNotificationAllowed(true);
-      toast.success("Notifications Enabled!");
     }
   }
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col justify-between px-4 py-6 sm:py-10 bg-[#FAFDFB] select-none">
+    <div className="relative min-h-screen w-full flex flex-col justify-between px-4 py-6 sm:py-10 bg-[#FAFDFB] dark:bg-slate-950 text-slate-900 dark:text-white select-none transition-colors">
       {/* SOFT CYAN AMBIENT RADIAL BACKGROUND */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 opacity-70"
+        className="pointer-events-none absolute inset-0 z-0 opacity-70 dark:opacity-30"
         style={{
           background:
             "radial-gradient(circle at 50% 25%, rgba(180, 240, 245, 0.45) 0%, rgba(224, 247, 250, 0.2) 40%, rgba(250, 253, 251, 0) 75%)",
         }}
       />
 
-      {/* TOP HEADER WITH BACK ARROW (From Image 4) */}
+      {/* TOP HEADER WITH BACK ARROW */}
       <header className="relative z-10 w-full max-w-md mx-auto flex items-center justify-between">
         <button
           type="button"
           onClick={onBack}
-          className="p-2 -ml-2 rounded-full text-slate-700 hover:bg-slate-200/50 transition-colors"
+          className="size-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           aria-label="Go Back"
         >
-          <FiArrowLeft className="size-6" />
+          <FiArrowLeft className="size-5" />
         </button>
       </header>
 
       {/* MAIN CONTENT AREA */}
       <main className="relative z-10 my-auto w-full max-w-md mx-auto space-y-6">
-        {/* HEADING (Exact from Image 2) */}
+        {/* HEADING */}
         <div className="text-center space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#044D63] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#044D63] dark:text-cyan-400 tracking-tight">
             Make SUPER work better
           </h1>
         </div>
 
-        {/* PERMISSION CARD 1: LOCATION (Exact from Image 2) */}
+        {/* PERMISSION CARD 1: LOCATION */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-cyan-900/5 space-y-4"
+          className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-white/10 shadow-xl shadow-cyan-900/5 dark:shadow-none space-y-4"
         >
           <div className="flex items-start gap-4">
-            {/* Cyan Location Badge (Image 2) */}
-            <span className="grid size-12 place-items-center rounded-full bg-[#D7F5F8] text-[#044D63] shrink-0">
+            <span className="grid size-12 place-items-center rounded-full bg-[#D7F5F8] dark:bg-cyan-500/20 text-[#044D63] dark:text-cyan-300 shrink-0">
               <FiMapPin className="size-6" />
             </span>
             <div className="space-y-0.5">
-              <h2 className="text-lg font-black text-slate-900 leading-snug">
+              <h2 className="text-lg font-black text-slate-900 dark:text-white leading-snug">
                 Location
               </h2>
-              <p className="text-xs text-slate-500 font-semibold leading-normal">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-normal">
                 Find stores, rides and deliveries near you.
               </p>
             </div>
@@ -121,7 +115,7 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
             className={`w-full h-11 rounded-2xl font-extrabold text-sm transition-all flex items-center justify-center gap-2 ${
               locationAllowed
                 ? "bg-emerald-500 text-white shadow-md"
-                : "bg-[#00BCD4] hover:bg-cyan-500 text-white shadow-md shadow-cyan-500/20"
+                : "bg-[#00BCD4] hover:bg-cyan-500 text-white shadow-md shadow-cyan-500/20 cursor-pointer"
             }`}
           >
             {locationLoading ? (
@@ -136,23 +130,22 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
           </button>
         </motion.div>
 
-        {/* PERMISSION CARD 2: NOTIFICATIONS (Exact from Image 2) */}
+        {/* PERMISSION CARD 2: NOTIFICATIONS */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.3 }}
-          className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-cyan-900/5 space-y-4"
+          className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-white/10 shadow-xl shadow-cyan-900/5 dark:shadow-none space-y-4"
         >
           <div className="flex items-start gap-4">
-            {/* Cyan Notification Badge (Image 2) */}
-            <span className="grid size-12 place-items-center rounded-full bg-[#D7F5F8] text-[#044D63] shrink-0">
+            <span className="grid size-12 place-items-center rounded-full bg-[#D7F5F8] dark:bg-cyan-500/20 text-[#044D63] dark:text-cyan-300 shrink-0">
               <FiBell className="size-6" />
             </span>
             <div className="space-y-0.5">
-              <h2 className="text-lg font-black text-slate-900 leading-snug">
+              <h2 className="text-lg font-black text-slate-900 dark:text-white leading-snug">
                 Notifications
               </h2>
-              <p className="text-xs text-slate-500 font-semibold leading-normal">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-normal">
                 Get order and ride updates.
               </p>
             </div>
@@ -165,7 +158,7 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
             className={`w-full h-11 rounded-2xl font-extrabold text-sm transition-all flex items-center justify-center gap-2 ${
               notificationAllowed
                 ? "bg-emerald-500 text-white shadow-md"
-                : "bg-[#00BCD4] hover:bg-cyan-500 text-white shadow-md shadow-cyan-500/20"
+                : "bg-[#00BCD4] hover:bg-cyan-500 text-white shadow-md shadow-cyan-500/20 cursor-pointer"
             }`}
           >
             {notificationLoading ? (
@@ -181,12 +174,12 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
         </motion.div>
       </main>
 
-      {/* FOOTER ACTIONS (Exact from Image 2) */}
+      {/* FOOTER ACTIONS */}
       <footer className="relative z-10 w-full max-w-md mx-auto space-y-3 pt-6">
         <button
           type="button"
           onClick={() => onNext({ location: locationAllowed, notifications: notificationAllowed })}
-          className="w-full h-13 rounded-2xl bg-gradient-to-r from-cyan-400 via-[#00BCD4] to-teal-600 hover:opacity-95 text-white font-extrabold text-base shadow-lg shadow-cyan-500/30 transition-all flex items-center justify-center"
+          className="w-full h-13 rounded-2xl bg-gradient-to-r from-cyan-400 via-[#00BCD4] to-teal-600 hover:opacity-95 text-white font-extrabold text-base shadow-lg shadow-cyan-500/30 transition-all flex items-center justify-center cursor-pointer"
         >
           Next
         </button>
@@ -194,7 +187,7 @@ export function PermissionsScreen({ onNext, onSkip, onBack }: PermissionsScreenP
         <button
           type="button"
           onClick={onSkip}
-          className="w-full text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors text-center py-1 block cursor-pointer"
+          className="w-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors text-center py-1 block cursor-pointer"
         >
           Skip for now
         </button>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -116,12 +115,10 @@ function AuthPage() {
   function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
     if (!phone || phone.length < 8) {
-      toast.error("Please enter a valid mobile number.");
       return;
     }
     setOtpSent(true);
     setOtpTimer(30);
-    toast.success(`OTP sent to +91 ${phone}! (Test code: 1234)`);
   }
 
   // Step 2: Verify OTP
@@ -129,10 +126,8 @@ function AuthPage() {
     e.preventDefault();
     const code = otp.join("");
     if (code.length < 4) {
-      toast.error("Please enter the 4-digit OTP code.");
       return;
     }
-    toast.success("Phone number verified successfully!");
     setStep(3); // Move to Step 3: Personal Details
   }
 
@@ -141,7 +136,6 @@ function AuthPage() {
     setGpsLoading(true);
     if (!("geolocation" in navigator)) {
       setGpsLoading(false);
-      toast.error("Geolocation is not supported by your browser.");
       return;
     }
 
@@ -171,20 +165,17 @@ function AuthPage() {
             setPincode(detectedPin);
             setPincodeMappedInfo(`${detectedStreet}, ${detectedCity} (${detectedPin})`);
             navaStore.setActiveLocation(`${detectedStreet}, ${detectedCity} ${detectedPin}`);
-            toast.success(`Accurate Location Detected: ${detectedStreet}, ${detectedCity}!`);
           } else {
             setArea("Indiranagar 100 Feet Road");
             setCity("Bengaluru");
             setPincode("560038");
             navaStore.setActiveLocation("Indiranagar, Bengaluru 560038");
-            toast.success("GPS Coordinates Detected!");
           }
         } catch {
           setArea("Indiranagar 100 Feet Road");
           setCity("Bengaluru");
           setPincode("560038");
           navaStore.setActiveLocation("Indiranagar, Bengaluru 560038");
-          toast.success("GPS Location Detected!");
         } finally {
           setGpsLoading(false);
         }
@@ -197,7 +188,6 @@ function AuthPage() {
         setCity("Bengaluru");
         setPincode("560038");
         navaStore.setActiveLocation("Indiranagar, Bengaluru 560038");
-        toast.success("Location auto-detected via GPS!");
       },
       {
         enableHighAccuracy: true,
@@ -229,7 +219,6 @@ function AuthPage() {
         setArea(`${name}, ${dist}`);
         const mappedStr = `${name}, ${dist}, ${st}`;
         setPincodeMappedInfo(mappedStr);
-        toast.success(`Pincode ${cleanPin} Mapped: ${name}, ${dist}!`);
         navaStore.setActiveLocation(`${name}, ${dist} ${cleanPin}`);
       } else {
         // 2. OpenStreetMap Nominatim search fallback
@@ -249,7 +238,6 @@ function AuthPage() {
           }
           const mappedStr = `${detectedArea}, ${detectedCity}`;
           setPincodeMappedInfo(mappedStr);
-          toast.success(`Location Mapped from Pincode ${cleanPin}!`);
           navaStore.setActiveLocation(`${detectedArea}, ${detectedCity} ${cleanPin}`);
         }
       }
@@ -317,7 +305,6 @@ function AuthPage() {
     navaStore.setActiveLocation(activeLoc);
 
     setBusy(false);
-    toast.success(`Welcome to LocoMart, ${name || "Partner"}! 🎉`);
     void navigate({ to: "/" });
   }
 
@@ -325,7 +312,6 @@ function AuthPage() {
   function handleSignInSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!loginPhoneOrEmail) {
-      toast.error("Please enter your registered phone number or email.");
       return;
     }
     const userProfile: Profile = {
@@ -339,7 +325,6 @@ function AuthPage() {
       language: "en",
     };
     navaStore.setSession(userProfile, "token-signin");
-    toast.success("Signed in successfully!");
     void navigate({ to: "/" });
   }
 
@@ -467,7 +452,6 @@ function AuthPage() {
             language: selectedLang,
           };
           navaStore.setSession(userProfile, "token-" + Date.now());
-          toast.success("Welcome to LocoMart! You're all set.");
           void navigate({ to: "/" });
         }}
       />

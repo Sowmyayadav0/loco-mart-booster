@@ -123,8 +123,11 @@ export function BottomNav() {
   }, [pathname]);
 
   const isCartOrCheckout = pathname.startsWith("/cart") || pathname.startsWith("/checkout");
-  const hasCartItems = count > 0 && !isCartOrCheckout;
+  const isAuthPage = pathname.startsWith("/auth");
 
+  if (isAuthPage) return null;
+
+  const hasCartItems = count > 0 && !isCartOrCheckout;
   const isCollapsed = isScrolledDown && !servicesMenuOpen;
 
   const homeTarget = getHomeRoute();
@@ -144,26 +147,27 @@ export function BottomNav() {
     pathname.startsWith("/courier") ||
     pathname.startsWith("/category");
 
-  const handleSelectService = useCallback((opt: (typeof ORBITAL_SERVICES)[0]) => {
-    setServicesMenuOpen(false);
-    setActiveHub(opt.id as any);
-    if ("params" in opt && opt.params) {
-      void navigate({ to: opt.to, params: opt.params });
-    } else {
-      void navigate({ to: opt.to as any });
-    }
-  }, [navigate, setActiveHub]);
+  const handleSelectService = useCallback(
+    (opt: (typeof ORBITAL_SERVICES)[0]) => {
+      setServicesMenuOpen(false);
+      setActiveHub(opt.id as any);
+      if ("params" in opt && opt.params) {
+        void navigate({ to: opt.to, params: opt.params });
+      } else {
+        void navigate({ to: opt.to as any });
+      }
+    },
+    [navigate, setActiveHub]
+  );
 
   // Clear & descriptive product order details
   const firstItem = active[0]?.product;
   const uniqueItemsCount = active.length;
   const itemSummary = firstItem
     ? uniqueItemsCount === 1
-      ? `${firstItem.name} (${active[0].quantity}x)`
+      ? `${firstItem.name} (${active[0]?.quantity}x)`
       : `${firstItem.name} +${uniqueItemsCount - 1} more`
     : store?.name || "Your Order";
-
-  const subLine = `${currency(subtotal)} • ${store?.name || "Instant Delivery"}`;
 
   const itemImage =
     firstItem?.image_url ||
@@ -276,7 +280,73 @@ export function BottomNav() {
         )}
       </AnimatePresence>
 
-      {/* 2. DYNAMIC MORPHING LUXURY SMOKED GLASS DOCK (GPU-ACCELERATED, ZERO-JANK) */}
+      {/* 2. ZOMATO / SWIGGY STYLE FLOATING VIEW CART BAR (WHEN CART HAS ITEMS) */}
+      <AnimatePresence>
+        {hasCartItems && (
+          <motion.div
+            initial={{ y: 80, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 80, opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 450, damping: 28 }}
+            className="fixed bottom-20 sm:bottom-22 inset-x-0 z-40 flex justify-center px-4 pointer-events-none select-none"
+          >
+            <div
+              onClick={() => void navigate({ to: "/cart" })}
+              className="pointer-events-auto w-full max-w-md rounded-2xl bg-slate-950/95 backdrop-blur-2xl text-white p-3 sm:p-3.5 border border-cyan-400/50 shadow-[0_12px_40px_rgba(0,188,212,0.45)] flex items-center justify-between cursor-pointer group hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              {/* Left Side: Product Thumbnail + Item Details */}
+              <div className="flex items-center gap-3 min-w-0">
+                {itemImage ? (
+                  <div className="relative size-11 rounded-xl overflow-hidden shrink-0 border border-cyan-400/50 shadow-xs bg-slate-900">
+                    <img src={itemImage} alt={itemSummary} className="size-full object-cover" />
+                    <span className="absolute -top-1 -right-1 size-4 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black grid place-items-center ring-1 ring-slate-950">
+                      {count}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="grid size-11 place-items-center rounded-xl bg-cyan-500/20 text-cyan-300 font-black border border-cyan-400/40 shrink-0 text-sm">
+                    {count}
+                  </div>
+                )}
+
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs sm:text-sm font-black text-white truncate leading-snug">
+                    {itemSummary}
+                  </span>
+                  <span className="text-[11px] font-extrabold text-cyan-300 flex items-center gap-1.5 mt-0.5">
+                    <span>{currency(subtotal)}</span>
+                    <span className="size-1 rounded-full bg-cyan-400" />
+                    <span className="text-slate-300 font-semibold truncate">{store?.name || "LocoMart Store"}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Side: Trash Icon + View Cart Button */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearCart();
+                  }}
+                  className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 rounded-xl transition-colors cursor-pointer"
+                  title="Clear Cart"
+                  aria-label="Clear Cart"
+                >
+                  <FiTrash2 className="size-4" />
+                </button>
+
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md group-hover:scale-105 transition-transform">
+                  <span>View Cart</span>
+                  <FiArrowRight className="size-4 stroke-[2.5]" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. DYNAMIC MORPHING LUXURY SMOKED GLASS DOCK */}
       <div className="fixed bottom-3 sm:bottom-4 inset-x-0 z-50 flex justify-center px-3 sm:px-4 pointer-events-none select-none">
         <div className="relative pointer-events-auto flex items-center justify-center">
           {/* FLOATING LUXURY SMOKED GLASS CHASSIS */}
@@ -300,9 +370,7 @@ export function BottomNav() {
               <div className="absolute inset-x-8 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none rounded-full" />
             )}
 
-            {/* ========================================================================= */}
-            {/* LEFT SECTION: HOME TAB / CART PREVIEW (AUTO-HIDES ON SCROLL DOWN) */}
-            {/* ========================================================================= */}
+            {/* LEFT SECTION: HOME TAB */}
             <div
               className={cn(
                 "flex-1 min-w-0 transition-all duration-300 ease-out transform-gpu",
@@ -311,100 +379,57 @@ export function BottomNav() {
                   : "opacity-100 translate-x-0 max-w-[140px] overflow-hidden"
               )}
             >
-              {hasCartItems ? (
-                /* CART PREVIEW PANEL (CLEARLY SHOWS ORDERED ITEMS & QUANTITY) */
-                <div
+              <div className="flex items-center justify-center">
+                <button
+                  type="button"
                   onClick={() => {
-                    void navigate({ to: "/cart" });
+                    setServicesMenuOpen(false);
+                    if (homeTarget.params) {
+                      void navigate({ to: homeTarget.to as any, params: homeTarget.params as any });
+                    } else {
+                      void navigate({ to: homeTarget.to as any });
+                    }
                   }}
-                  className="flex items-center gap-2 min-w-0 pr-1 py-0.5 cursor-pointer group select-none touch-manipulation transition-transform active:scale-95"
-                  title="View Cart Details"
+                  className={cn(
+                    "relative w-full flex items-center justify-center gap-1.5 py-2 px-3",
+                    "rounded-full outline-none transition-all duration-150 cursor-pointer select-none group touch-manipulation active:scale-95",
+                    isHomeActive && (isDark ? "bg-white/10 text-cyan-300 shadow-inner" : "bg-slate-900/10 text-cyan-700")
+                  )}
                 >
-                  {/* Thumbnail Avatar with Quantity Badge */}
-                  <div className="relative size-9 sm:size-9.5 rounded-xl overflow-hidden shrink-0 bg-slate-900 border border-cyan-400/40 shadow-xs">
-                    {itemImage ? (
-                      <img
-                        src={itemImage}
-                        alt={itemSummary}
-                        className="size-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="size-full grid place-items-center text-cyan-400">
-                        <FiShoppingBag className="size-4.5" />
-                      </div>
-                    )}
-                    <span className="absolute -top-0.5 -right-0.5 min-w-3.5 h-3.5 px-0.5 rounded-full bg-cyan-400 text-slate-950 font-black text-[8px] grid place-items-center ring-1 ring-slate-950">
-                      {count}
+                  <div className="relative z-10 flex items-center gap-1.5 whitespace-nowrap">
+                    <FiHome
+                      className={cn(
+                        "size-4 transition-transform duration-150",
+                        isHomeActive
+                          ? isDark
+                            ? "text-cyan-400 stroke-[2.5] scale-110"
+                            : "text-cyan-600 stroke-[2.5] scale-110"
+                          : isDark
+                          ? "text-slate-400 group-hover:text-slate-200 stroke-[1.8]"
+                          : "text-slate-500 group-hover:text-slate-900 stroke-[1.8]"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-xs font-bold tracking-tight transition-colors duration-150",
+                        isHomeActive
+                          ? isDark
+                            ? "text-white font-black"
+                            : "text-slate-950 font-black"
+                          : isDark
+                          ? "text-slate-400 group-hover:text-slate-200"
+                          : "text-slate-500 group-hover:text-slate-900"
+                      )}
+                    >
+                      Home
                     </span>
                   </div>
-
-                  {/* Ordered Item Name & Price Sub-line */}
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-black text-[11px] sm:text-xs text-white truncate leading-tight group-hover:text-cyan-300 transition-colors">
-                      {itemSummary}
-                    </span>
-                    <span className="text-[10px] font-extrabold text-cyan-300 truncate leading-tight mt-0.5">
-                      {subLine}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                /* STANDARD HOME TAB (WHEN CART IS EMPTY) */
-                <div className="flex items-center justify-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setServicesMenuOpen(false);
-                      if (homeTarget.params) {
-                        void navigate({ to: homeTarget.to as any, params: homeTarget.params as any });
-                      } else {
-                        void navigate({ to: homeTarget.to as any });
-                      }
-                    }}
-                    className={cn(
-                      "relative w-full flex items-center justify-center gap-1.5 py-2 px-3",
-                      "rounded-full outline-none transition-all duration-150 cursor-pointer select-none group touch-manipulation active:scale-95",
-                      isHomeActive && (isDark ? "bg-white/10 text-cyan-300 shadow-inner" : "bg-slate-900/10 text-cyan-700")
-                    )}
-                  >
-                    <div className="relative z-10 flex items-center gap-1.5 whitespace-nowrap">
-                      <FiHome
-                        className={cn(
-                          "size-4 transition-transform duration-150",
-                          isHomeActive
-                            ? isDark
-                              ? "text-cyan-400 stroke-[2.5] scale-110"
-                              : "text-cyan-600 stroke-[2.5] scale-110"
-                            : isDark
-                            ? "text-slate-400 group-hover:text-slate-200 stroke-[1.8]"
-                            : "text-slate-500 group-hover:text-slate-900 stroke-[1.8]"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs font-bold tracking-tight transition-colors duration-150",
-                          isHomeActive
-                            ? isDark
-                              ? "text-white font-black"
-                              : "text-slate-950 font-black"
-                            : isDark
-                            ? "text-slate-400 group-hover:text-slate-200"
-                            : "text-slate-500 group-hover:text-slate-900"
-                        )}
-                      >
-                        Home
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              )}
+                </button>
+              </div>
             </div>
 
-            {/* ========================================================================= */}
-            {/* CENTER SECTION: ALWAYS PROMINENT ROUND 3D "SERVICES" HUB BUTTON */}
-            {/* ========================================================================= */}
+            {/* CENTER SECTION: SERVICES BUTTON */}
             <div className="relative flex items-center justify-center px-1 shrink-0">
-              {/* Central Sleek Convex Smoked Glass FAB Hub */}
               <button
                 type="button"
                 onClick={() => setServicesMenuOpen((prev) => !prev)}
@@ -436,10 +461,8 @@ export function BottomNav() {
                       `,
                 }}
               >
-                {/* Top Specular Rim Glare */}
                 <div className="absolute top-0.5 inset-x-2.5 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
 
-                {/* Morphing Line Icon (Grid <-> Close X) */}
                 <div className="grid place-items-center relative z-10 transition-transform duration-200">
                   {servicesMenuOpen ? (
                     <FiX className="size-5 sm:size-5.5 stroke-[2.5] text-rose-400" />
@@ -448,16 +471,13 @@ export function BottomNav() {
                   )}
                 </div>
 
-                {/* Active Indicator Pulse Sparkle */}
                 {isServicesActive && !servicesMenuOpen && (
                   <span className="absolute bottom-1 size-1 rounded-full bg-cyan-300 shadow-[0_0_6px_#00BCD4]" />
                 )}
               </button>
             </div>
 
-            {/* ========================================================================= */}
-            {/* RIGHT SECTION: ORDERS TAB / VIEW CART (AUTO-HIDES ON SCROLL DOWN) */}
-            {/* ========================================================================= */}
+            {/* RIGHT SECTION: ORDERS TAB */}
             <div
               className={cn(
                 "flex-1 min-w-0 transition-all duration-300 ease-out transform-gpu",
@@ -466,78 +486,47 @@ export function BottomNav() {
                   : "opacity-100 translate-x-0 max-w-[140px] overflow-hidden"
               )}
             >
-              {hasCartItems ? (
-                /* "VIEW CART" & DELETE ACTION GROUP (WHEN CART HAS ITEMS) */
-                <div className="flex items-center justify-end gap-1.5 pl-1 whitespace-nowrap">
-                  {/* VIEW CART PILL BUTTON */}
-                  <button
-                    type="button"
-                    onClick={() => void navigate({ to: "/cart" })}
-                    className="flex-1 flex items-center justify-center gap-1 py-2 px-2.5 rounded-full bg-gradient-to-r from-rose-500 via-rose-600 to-red-600 hover:opacity-95 text-white font-black text-[11px] sm:text-xs shadow-md shadow-rose-600/35 active:scale-95 transition-all cursor-pointer truncate touch-manipulation"
-                  >
-                    <span>View Cart</span>
-                    <FiArrowRight className="size-3 stroke-[2.5] shrink-0" />
-                  </button>
-
-                  {/* DELETE / CLEAR CART TRASH BUTTON */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      clearCart();
-                    }}
-                    className="size-8 rounded-full bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 hover:text-rose-200 border border-rose-500/30 grid place-items-center transition-all active:scale-85 shrink-0 cursor-pointer shadow-xs touch-manipulation"
-                    title="Delete / Clear Cart"
-                    aria-label="Delete / Clear Cart"
-                  >
-                    <FiTrash2 className="size-3.5" />
-                  </button>
-                </div>
-              ) : (
-                /* STANDARD ORDERS TAB (WHEN CART IS EMPTY) */
-                <div className="flex items-center justify-center">
-                  <Link
-                    to="/orders"
-                    preload="intent"
-                    onClick={() => setServicesMenuOpen(false)}
-                    className={cn(
-                      "relative w-full flex items-center justify-center gap-1.5 py-2 px-3",
-                      "rounded-full outline-none transition-all duration-150 cursor-pointer select-none group touch-manipulation active:scale-95",
-                      isOrdersActive && (isDark ? "bg-white/10 text-amber-300 shadow-inner" : "bg-slate-900/10 text-amber-700")
-                    )}
-                  >
-                    <div className="relative z-10 flex items-center gap-1.5 whitespace-nowrap">
-                      <FiPackage
-                        className={cn(
-                          "size-4 transition-transform duration-150",
-                          isOrdersActive
-                            ? isDark
-                              ? "text-amber-400 stroke-[2.5] scale-110"
-                              : "text-amber-600 stroke-[2.5] scale-110"
-                            : isDark
-                            ? "text-slate-400 group-hover:text-slate-200 stroke-[1.8]"
-                            : "text-slate-500 group-hover:text-slate-900 stroke-[1.8]"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs font-bold tracking-tight transition-colors duration-150",
-                          isOrdersActive
-                            ? isDark
-                              ? "text-white font-black"
-                              : "text-slate-950 font-black"
-                            : isDark
-                            ? "text-slate-400 group-hover:text-slate-200"
-                            : "text-slate-500 group-hover:text-slate-900"
-                        )}
-                      >
-                        Orders
-                      </span>
-                    </div>
-                  </Link>
-                </div>
-              )}
+              <div className="flex items-center justify-center">
+                <Link
+                  to="/orders"
+                  preload="intent"
+                  onClick={() => setServicesMenuOpen(false)}
+                  className={cn(
+                    "relative w-full flex items-center justify-center gap-1.5 py-2 px-3",
+                    "rounded-full outline-none transition-all duration-150 cursor-pointer select-none group touch-manipulation active:scale-95",
+                    isOrdersActive && (isDark ? "bg-white/10 text-amber-300 shadow-inner" : "bg-slate-900/10 text-amber-700")
+                  )}
+                >
+                  <div className="relative z-10 flex items-center gap-1.5 whitespace-nowrap">
+                    <FiPackage
+                      className={cn(
+                        "size-4 transition-transform duration-150",
+                        isOrdersActive
+                          ? isDark
+                            ? "text-amber-400 stroke-[2.5] scale-110"
+                            : "text-amber-600 stroke-[2.5] scale-110"
+                          : isDark
+                          ? "text-slate-400 group-hover:text-slate-200 stroke-[1.8]"
+                          : "text-slate-500 group-hover:text-slate-900 stroke-[1.8]"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-xs font-bold tracking-tight transition-colors duration-150",
+                        isOrdersActive
+                          ? isDark
+                            ? "text-white font-black"
+                            : "text-slate-950 font-black"
+                          : isDark
+                          ? "text-slate-400 group-hover:text-slate-200"
+                          : "text-slate-500 group-hover:text-slate-900"
+                      )}
+                    >
+                      Orders
+                    </span>
+                  </div>
+                </Link>
+              </div>
             </div>
           </nav>
         </div>

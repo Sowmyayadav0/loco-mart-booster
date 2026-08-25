@@ -13,7 +13,6 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Smooth progress animation from 15% to 100%
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
@@ -37,20 +36,20 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-between px-4 py-8 sm:py-12 bg-[#FAFDFB] overflow-hidden select-none">
-      {/* SOFT CYAN AMBIENT RADIAL GLOW (Combined from Image 1 & Image 2 & Image 3) */}
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-between px-4 py-8 sm:py-12 bg-[#FAFDFB] dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden select-none transition-colors">
+      {/* SOFT CYAN AMBIENT RADIAL GLOW */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 opacity-80"
+        className="pointer-events-none absolute inset-0 z-0 opacity-80 dark:opacity-30"
         style={{
           background:
             "radial-gradient(circle at 50% 45%, rgba(175, 238, 245, 0.45) 0%, rgba(224, 247, 250, 0.25) 35%, rgba(250, 253, 251, 0) 70%)",
         }}
       />
 
-      {/* TOP NAVIGATION HEADER WITH BRAND BADGE & DIRECT SIGN IN */}
+      {/* TOP NAVIGATION HEADER */}
       <header className="relative z-10 w-full max-w-4xl flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-700 border border-cyan-300/40">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-700 dark:text-cyan-300 border border-cyan-300/40 dark:border-cyan-500/30">
             <FiZap className="size-3.5 text-cyan-500" /> LocoMart Super App
           </span>
         </div>
@@ -58,28 +57,27 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
           <button
             type="button"
             onClick={onSignInDirect}
-            className="text-xs font-extrabold text-slate-600 hover:text-cyan-600 transition-colors px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 hover:bg-white shadow-2xs"
+            className="text-xs font-extrabold text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 shadow-2xs cursor-pointer"
           >
-            Already have an account? <span className="text-cyan-600 font-black underline ml-1">Sign In</span>
+            Already have an account? <span className="text-cyan-600 dark:text-cyan-400 font-black underline ml-1">Sign In</span>
           </button>
         )}
       </header>
 
-      {/* MAIN CENTER CONTENT (Combining Image 3 Card & Image 2 Headline) */}
+      {/* MAIN CENTER CONTENT */}
       <main className="relative z-10 my-auto flex flex-col items-center text-center space-y-6 max-w-lg w-full">
-        {/* CENTER WHITE FLOATING LOGO CARD (Exact from Image 3) */}
+        {/* CENTER WHITE FLOATING LOGO CARD */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 15 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative grid place-items-center rounded-3xl bg-white p-7 shadow-2xl shadow-cyan-900/10 border border-slate-100 max-w-[280px] sm:max-w-[310px] w-full aspect-square"
+          className="relative grid place-items-center rounded-3xl bg-white dark:bg-slate-900 p-7 shadow-2xl shadow-cyan-900/10 dark:shadow-none border border-slate-100 dark:border-white/10 max-w-[280px] sm:max-w-[310px] w-full aspect-square"
         >
           <div className="flex flex-col items-center justify-center space-y-4">
-            {/* HYPERLOCAL "H" BRAND ICON (From Image 3) */}
+            {/* HYPERLOCAL "H" BRAND ICON */}
             <div className="relative flex items-center justify-center size-24 sm:size-28 rounded-3xl bg-gradient-to-br from-cyan-400 via-sky-400 to-teal-500 p-1 shadow-lg shadow-cyan-500/25 animate-pulse">
-              <div className="size-full bg-white rounded-[22px] flex items-center justify-center p-2">
+              <div className="size-full bg-white dark:bg-slate-950 rounded-[22px] flex items-center justify-center p-2">
                 <svg className="size-16 sm:size-20" viewBox="0 0 100 100" fill="none">
-                  {/* Linked Double Pill "H" Logo */}
                   <rect x="18" y="20" width="20" height="60" rx="10" fill="#00BCD4" />
                   <rect x="62" y="20" width="20" height="60" rx="10" fill="#00BCD4" />
                   <rect x="25" y="40" width="50" height="20" rx="10" fill="#00BCD4" />
@@ -90,39 +88,39 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
               </div>
             </div>
 
-            {/* LOGO TEXT INSIDE CARD (From Image 3) */}
+            {/* LOGO TEXT INSIDE CARD */}
             <div className="space-y-0.5">
-              <h2 className="text-sm sm:text-base font-black tracking-wider text-cyan-600 uppercase">
+              <h2 className="text-sm sm:text-base font-black tracking-wider text-cyan-600 dark:text-cyan-400 uppercase">
                 HYPERLOCAL
               </h2>
-              <p className="text-[11px] font-extrabold tracking-widest text-slate-500 uppercase">
+              <p className="text-[11px] font-extrabold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
                 SUPER APP
               </p>
             </div>
           </div>
         </motion.div>
 
-        {/* SUBTITLE BELOW CARD (From Image 3) */}
+        {/* SUBTITLE BELOW CARD */}
         <motion.h3
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
-          className="text-2xl sm:text-3xl font-black text-[#044D63] tracking-tight"
+          className="text-2xl sm:text-3xl font-black text-[#044D63] dark:text-cyan-400 tracking-tight"
         >
           Almost ready...
         </motion.h3>
 
-        {/* BIG TAGLINE HEADLINE (From Image 2) */}
+        {/* BIG TAGLINE HEADLINE */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.5 }}
           className="space-y-2 pt-2"
         >
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Everything. Nearby.
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-semibold max-w-xs mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold max-w-xs mx-auto">
             Food, Groceries, Shopping, Rides & Instant Parcel Courier delivered to your doorstep.
           </p>
         </motion.div>
@@ -137,7 +135,7 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
           <button
             type="button"
             onClick={onProceed}
-            className="w-full h-13 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5"
+            className="w-full h-13 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5 cursor-pointer"
           >
             <span>{isReady ? "Get Started" : "Continue to Sign Up"}</span>
             <FiArrowRight className="size-5" />
@@ -145,12 +143,11 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
         </motion.div>
       </main>
 
-      {/* FOOTER SECTION: CONNECTION CHECK & PROGRESS BAR (Exact from Image 2) */}
+      {/* FOOTER SECTION */}
       <footer className="relative z-10 w-full max-w-sm flex flex-col items-center space-y-3 text-center pb-2">
-        {/* UPPERCASE CONNECTION STATUS TEXT (From Image 2) */}
-        <div className="flex items-center gap-2 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">
+        <div className="flex items-center gap-2 text-[11px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
           {isReady ? (
-            <span className="flex items-center gap-1.5 text-emerald-600">
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <FiCheckCircle className="size-3.5" /> SYSTEM READY • V1.0.0
             </span>
           ) : (
@@ -158,8 +155,8 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
           )}
         </div>
 
-        {/* ANIMATED PROGRESS BAR TRACK & FILL (Exact from Image 2) */}
-        <div className="h-1.5 w-64 sm:w-72 rounded-full bg-slate-200/80 overflow-hidden shadow-inner p-0.5">
+        {/* ANIMATED PROGRESS BAR */}
+        <div className="h-1.5 w-64 sm:w-72 rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden shadow-inner p-0.5">
           <div
             className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-teal-500 rounded-full transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
@@ -167,8 +164,8 @@ export function WelcomeSplashPage({ onProceed, onSignInDirect }: WelcomeSplashPa
         </div>
 
         {/* TRUST BADGE */}
-        <div className="pt-2 text-[10px] font-bold text-slate-400 flex items-center gap-1">
-          <FiShield className="size-3.5 text-cyan-600" /> 100% Encrypted & Safe Super App
+        <div className="pt-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+          <FiShield className="size-3.5 text-cyan-600 dark:text-cyan-400" /> 100% Encrypted & Safe Super App
         </div>
       </footer>
     </div>

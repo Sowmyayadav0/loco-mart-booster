@@ -30,7 +30,7 @@ export function QuantityStepper({ product }: { product: Product }) {
         type="button"
         whileTap={{ scale: 0.92 }}
         onClick={() => addToCart(product.id)}
-        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-primary bg-primary/10 px-4 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 dark:bg-cyan-500/20 px-3.5 text-xs sm:text-sm font-bold text-cyan-600 dark:text-cyan-300 transition-colors hover:bg-cyan-500 hover:text-white"
       >
         <FiPlus className="size-3.5" /> Add
       </motion.button>
@@ -38,23 +38,23 @@ export function QuantityStepper({ product }: { product: Product }) {
   }
 
   return (
-    <div className="inline-flex h-9 items-center gap-3 rounded-xl bg-primary px-2 text-primary-foreground shadow-sm">
+    <div className="inline-flex h-9 items-center gap-2.5 rounded-xl bg-cyan-500 text-slate-950 px-2.5 shadow-sm font-black">
       <button
         type="button"
         aria-label="Decrease quantity"
         onClick={() => setQty.mutate({ itemId: line.id, quantity: line.quantity - 1 })}
-        className="grid size-6 place-items-center rounded-lg hover:bg-black/20 transition-colors"
+        className="grid size-6 place-items-center rounded-lg hover:bg-black/15 transition-colors cursor-pointer"
       >
-        <FiMinus className="size-3" />
+        <FiMinus className="size-3 stroke-[2.5]" />
       </button>
-      <span className="min-w-4 text-center text-sm font-bold">{line.quantity}</span>
+      <span className="min-w-4 text-center text-xs sm:text-sm font-black">{line.quantity}</span>
       <button
         type="button"
         aria-label="Increase quantity"
         onClick={() => setQty.mutate({ itemId: line.id, quantity: line.quantity + 1 })}
-        className="grid size-6 place-items-center rounded-lg hover:bg-black/20 transition-colors"
+        className="grid size-6 place-items-center rounded-lg hover:bg-black/15 transition-colors cursor-pointer"
       >
-        <FiPlus className="size-3" />
+        <FiPlus className="size-3 stroke-[2.5]" />
       </button>
     </div>
   );
@@ -66,16 +66,16 @@ function ProductImage({ src, alt }: { src: string | null; alt: string }) {
 
   if (!src || error) {
     return (
-      <div className="aspect-square w-full bg-gradient-to-br from-slate-700 to-slate-800 grid place-items-center text-4xl">
-        <FiShoppingBag className="size-10 text-slate-500" />
+      <div className="aspect-square w-full bg-slate-100 dark:bg-slate-800 grid place-items-center text-4xl">
+        <FiShoppingBag className="size-10 text-slate-400 dark:text-slate-600" />
       </div>
     );
   }
 
   return (
-    <div className="aspect-square w-full relative overflow-hidden bg-slate-800">
+    <div className="aspect-square w-full relative overflow-hidden bg-slate-100 dark:bg-slate-800">
       {!loaded && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-[length:200%_100%]" />
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 bg-[length:200%_100%]" />
       )}
       <img
         src={src}

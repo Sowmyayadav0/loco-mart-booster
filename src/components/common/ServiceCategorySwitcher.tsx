@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface ServiceCategorySwitcherProps {
   activeService: "food" | "shop" | "ride" | "courier";
+  showSearch?: boolean;
 }
 
 const SERVICES = [
@@ -59,11 +60,82 @@ const SERVICES = [
   },
 ];
 
-export function ServiceCategorySwitcher({ activeService }: ServiceCategorySwitcherProps) {
+export function CategorySearchBar({
+  activeService = "food",
+  className = "",
+  placeholder,
+}: {
+  activeService?: "food" | "shop" | "ride" | "courier";
+  className?: string;
+  placeholder?: string;
+}) {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
-  const { theme, setActiveHub } = useApp();
-  const isDark = theme === "dark";
+  const activeItem = SERVICES.find((s) => s.key === activeService) ?? SERVICES[0]!;
+  const defaultPlaceholder =
+    placeholder || `Search ${activeItem.label} (${activeItem.badge}) — stores, items, or services...`;
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const qStr = term.trim();
+        if (qStr) {
+          void navigate({ to: "/search", search: { q: qStr } });
+        }
+      }}
+      className={cn("relative flex items-center w-full group max-w-2xl mx-auto my-3.5", className)}
+    >
+      <div className="absolute left-4 z-10 text-slate-400 group-focus-within:text-cyan-400 transition-colors duration-200 pointer-events-none">
+        <FiSearch className="size-4.5" />
+      </div>
+      <input
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const qStr = term.trim();
+            if (qStr) {
+              void navigate({ to: "/search", search: { q: qStr } });
+            }
+          }
+        }}
+        placeholder={defaultPlaceholder}
+        className="h-11 sm:h-12 w-full rounded-2xl border border-white/15 bg-slate-950/85 backdrop-blur-3xl text-white placeholder:text-slate-400 pl-11 pr-14 text-xs sm:text-sm font-semibold outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.5),inset_0_1.5px_1px_rgba(255,255,255,0.1)] transition-all duration-200"
+      />
+      {term ? (
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.88 }}
+          onClick={() => setTerm("")}
+          className="absolute right-3.5 p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          title="Clear search"
+        >
+          <FiX className="size-4" />
+        </motion.button>
+      ) : (
+        <motion.button
+          type="submit"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.92 }}
+          transition={{ type: "spring", stiffness: 500, damping: 25 }}
+          className="absolute right-1.5 grid size-8 sm:size-9 place-items-center rounded-xl text-white font-bold transition-all shadow-md cursor-pointer"
+          style={{
+            background: `linear-gradient(135deg, ${activeItem.accentColor} 0%, ${activeItem.glowColor} 100%)`,
+            boxShadow: `0 4px 14px ${activeItem.glowColor}`,
+          }}
+          title="Search"
+        >
+          <FiSearch className="size-4" />
+        </motion.button>
+      )}
+    </form>
+  );
+}
+
+export function ServiceCategorySwitcher({ activeService, showSearch = false }: ServiceCategorySwitcherProps) {
+  const { setActiveHub } = useApp();
 
   const activeItem = SERVICES.find((s) => s.key === activeService) ?? SERVICES[0]!;
 
@@ -316,64 +388,7 @@ export function ServiceCategorySwitcher({ activeService }: ServiceCategorySwitch
             })}
           </div>
         </div>
-      </div>
-
-      {/* 2. MATCHING DARK GLASS SEARCH BAR */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const qStr = term.trim();
-          if (qStr) {
-            void navigate({ to: "/search", search: { q: qStr } });
-          }
-        }}
-        className="relative flex items-center w-full group"
-      >
-        <div className="absolute left-4 z-10 text-slate-400 group-focus-within:text-cyan-400 transition-colors duration-200 pointer-events-none">
-          <FiSearch className="size-4.5" />
-        </div>
-        <input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const qStr = term.trim();
-              if (qStr) {
-                void navigate({ to: "/search", search: { q: qStr } });
-              }
-            }
-          }}
-          placeholder={`Search ${activeItem.label} (${activeItem.badge}) — stores, items, or services...`}
-          className="h-11 sm:h-12 w-full rounded-2xl border border-white/15 bg-slate-950/85 backdrop-blur-3xl text-white placeholder:text-slate-400 pl-11 pr-14 text-xs sm:text-sm font-semibold outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.5),inset_0_1.5px_1px_rgba(255,255,255,0.1)] transition-all duration-200"
-        />
-        {term ? (
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.88 }}
-            onClick={() => setTerm("")}
-            className="absolute right-3.5 p-1 text-slate-400 hover:text-white transition-colors"
-            title="Clear search"
-          >
-            <FiX className="size-4" />
-          </motion.button>
-        ) : (
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.92 }}
-            transition={{ type: "spring", stiffness: 500, damping: 25 }}
-            className="absolute right-1.5 grid size-8 sm:size-9 place-items-center rounded-xl text-white font-bold transition-all shadow-md"
-            style={{
-              background: `linear-gradient(135deg, ${activeItem.accentColor} 0%, ${activeItem.glowColor} 100%)`,
-              boxShadow: `0 4px 14px ${activeItem.glowColor}`,
-            }}
-            title="Search"
-          >
-            <FiSearch className="size-4" />
-          </motion.button>
-        )}
-      </form>
+      </div>      {showSearch && <CategorySearchBar activeService={activeService} />}
     </div>
   );
 }

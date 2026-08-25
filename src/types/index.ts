@@ -43,6 +43,7 @@ export interface Store {
   min_order: number;
   is_open: boolean;
   tags: string[];
+  offer?: string;
 }
 
 export interface Product {

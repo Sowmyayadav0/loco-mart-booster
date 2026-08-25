@@ -20,7 +20,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "sonner";
 import { useCartActions } from "@/hooks/useCart";
-import { ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
+import { CategorySearchBar, ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
 
 export function ShopHubView() {
   const navigate = useNavigate();
@@ -87,6 +87,9 @@ export function ShopHubView() {
           </div>
         </div>
       </div>
+
+      {/* SEARCH BAR UNDER THE BANNER */}
+      <CategorySearchBar activeService="shop" />
 
       {/* 3. EXPLORE SHOP CATEGORIES - COMPACT CREATIVE CAPSULE RIBBON */}
       <div className="space-y-3">
@@ -217,7 +220,7 @@ export function ShopHubView() {
       {/* 4. TRENDING SHOP DEALS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Trending Superstore Deals
           </h2>
           <button
@@ -270,31 +273,31 @@ export function ShopHubView() {
           ].map((item) => (
             <div
               key={item.id}
-              className="group rounded-3xl bg-white border border-slate-100 shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between"
+              className="group rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between"
             >
-              <div className="relative h-44 w-full overflow-hidden bg-slate-100">
+              <div className="relative h-44 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
                   src={item.img}
                   alt={item.name}
                   className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-black text-slate-800 flex items-center gap-1 shadow-xs">
+                <span className="absolute top-3 right-3 bg-white/90 dark:bg-slate-950/80 backdrop-blur px-2.5 py-1 rounded-full text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-xs border border-transparent dark:border-white/10">
                   <FiStar className="size-3.5 fill-amber-400 text-amber-400" /> {item.rating}
                 </span>
               </div>
 
               <div className="p-4 space-y-2">
-                <h3 className="font-extrabold text-base text-slate-900 leading-snug group-hover:text-[#00BCD4] transition-colors">
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white leading-snug group-hover:text-[#00BCD4] transition-colors">
                   {item.name}
                 </h3>
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
                   <span>₹{item.price} • {item.time}</span>
                   <button
                     type="button"
                     onClick={() => {
                       addToCart(item.productId, 1);
                     }}
-                    className="size-8 rounded-full bg-[#EEFBFD] hover:bg-[#00BCD4] text-[#044D63] hover:text-white grid place-items-center transition-colors shadow-2xs cursor-pointer"
+                    className="size-8 rounded-full bg-[#EEFBFD] dark:bg-cyan-500/20 hover:bg-[#00BCD4] text-[#044D63] dark:text-cyan-300 hover:text-white grid place-items-center transition-colors shadow-2xs cursor-pointer"
                   >
                     <FiPlus className="size-4" />
                   </button>
@@ -307,7 +310,7 @@ export function ShopHubView() {
 
       {/* 5. RECOMMENDED SHOP COMBOS */}
       <div className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Superstore Special Collections
         </h2>
 
@@ -331,7 +334,7 @@ export function ShopHubView() {
           ].map((rec, i) => (
             <div
               key={i}
-              className="relative h-44 rounded-3xl overflow-hidden shadow-md group cursor-pointer"
+              className="relative h-44 rounded-3xl overflow-hidden shadow-md group cursor-pointer border border-transparent dark:border-white/10"
             >
               <img
                 src={rec.img}
@@ -349,22 +352,22 @@ export function ShopHubView() {
 
       {/* 6. RECENTLY PURCHASED SHOP CARD */}
       <div className="space-y-3">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Recently Purchased
         </h2>
 
-        <div className="flex items-center justify-between p-4 sm:p-5 rounded-3xl bg-white border border-slate-100 shadow-md">
+        <div className="flex items-center justify-between p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 shadow-md dark:shadow-none">
           <div className="flex items-center gap-4">
             <img
               src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=150&q=80"
               alt="Reliance Smart Supermarket"
-              className="size-14 sm:size-16 rounded-2xl object-cover shrink-0 border border-slate-200"
+              className="size-14 sm:size-16 rounded-2xl object-cover shrink-0 border border-slate-200 dark:border-white/10"
             />
             <div className="space-y-0.5">
-              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">
                 Reliance Smart Supermarket
               </h3>
-              <p className="text-xs sm:text-sm font-semibold text-slate-500">
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
                 Fresh Dairy & Pantry Basket • ₹345
               </p>
             </div>
@@ -373,7 +376,7 @@ export function ShopHubView() {
           <button
             type="button"
             onClick={handleReorder}
-            className="h-10 px-5 rounded-full bg-[#D7F5F8] hover:bg-[#00BCD4] text-[#044D63] hover:text-white font-black text-xs shadow-2xs transition-all uppercase tracking-wider shrink-0"
+            className="h-10 px-5 rounded-full bg-[#D7F5F8] dark:bg-cyan-500/20 hover:bg-[#00BCD4] text-[#044D63] dark:text-cyan-300 hover:text-white font-black text-xs shadow-2xs transition-all uppercase tracking-wider shrink-0"
           >
             REORDER
           </button>
@@ -382,7 +385,7 @@ export function ShopHubView() {
 
       {/* 7. FEATURED SUPERSTORES & PHARMACIES */}
       <div className="space-y-4">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Featured Superstores
         </h2>
 
@@ -412,18 +415,18 @@ export function ShopHubView() {
           ].map((store, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 p-4 rounded-3xl bg-white border border-slate-100 shadow-md hover:shadow-lg transition-all cursor-pointer"
+              className="flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
               <img
                 src={store.img}
                 alt={store.name}
-                className="size-16 rounded-2xl object-cover shrink-0 border border-slate-200"
+                className="size-16 rounded-2xl object-cover shrink-0 border border-slate-200 dark:border-white/10"
               />
               <div className="space-y-0.5 overflow-hidden">
-                <h3 className="text-base font-extrabold text-slate-900 leading-tight truncate">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight truncate">
                   {store.name}
                 </h3>
-                <p className="text-xs font-semibold text-slate-500">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {store.cat} • {store.dist}
                 </p>
                 <div className="flex items-center gap-1 text-xs font-bold text-amber-500 pt-0.5">
@@ -440,10 +443,10 @@ export function ShopHubView() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Superstore Flash Deals ⚡
             </h2>
-            <span className="rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-extrabold text-xs px-3 py-1">
+            <span className="rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-extrabold text-xs px-3 py-1">
               Ends in {formatTimer(timeLeft)}
             </span>
           </div>
@@ -456,18 +459,18 @@ export function ShopHubView() {
             { name: "Fresh Filter Coffee", price: 99, orig: 140, img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80" },
             { name: "Dark Chocolate 100g", price: 120, orig: 180, img: "https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&w=400&q=80" },
           ].map((deal, i) => (
-            <div key={i} className="p-3.5 rounded-3xl bg-white border border-slate-100 shadow-md space-y-2 flex flex-col justify-between">
-              <div className="relative h-32 w-full rounded-2xl overflow-hidden bg-slate-50">
+            <div key={i} className="p-3.5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 shadow-md space-y-2 flex flex-col justify-between">
+              <div className="relative h-32 w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img src={deal.img} alt={deal.name} className="size-full object-cover" />
-                <span className="absolute top-2 left-2 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                <span className="absolute top-2 left-2 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs">
                   SAVE ₹{deal.orig - deal.price}
                 </span>
               </div>
               <div>
-                <h4 className="text-xs font-extrabold text-slate-900 leading-tight">{deal.name}</h4>
+                <h4 className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">{deal.name}</h4>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-sm font-black text-slate-900">₹{deal.price}</span>
-                  <span className="text-xs font-semibold text-slate-400 line-through">₹{deal.orig}</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">₹{deal.price}</span>
+                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 line-through">₹{deal.orig}</span>
                 </div>
               </div>
               <button

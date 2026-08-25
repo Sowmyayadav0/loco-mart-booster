@@ -2,23 +2,26 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  FiArrowLeft,
   FiArrowRight,
   FiCheckCircle,
   FiClock,
   FiCompass,
   FiCreditCard,
   FiCrosshair,
+  FiEdit2,
   FiMapPin,
   FiMessageSquare,
   FiNavigation,
   FiPhone,
   FiShield,
   FiStar,
+  FiTag,
   FiTruck,
+  FiUserCheck,
   FiX,
   FiZap,
 } from "react-icons/fi";
-import { toast } from "sonner";
 import {
   DRIVERS,
   RECENT_PLACES,
@@ -28,6 +31,8 @@ import {
 } from "@/lib/verticals";
 import { currency } from "@/utils/format";
 import { ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
+import { InteractiveRideMap } from "@/components/map/InteractiveRideMap";
+import { navaStore } from "@/lib/navaStore";
 
 export const Route = createFileRoute("/rides")({
   head: () => ({
@@ -51,137 +56,134 @@ type Stage = "locate" | "select" | "confirm" | "assigned" | "ontrip" | "done";
 
 const TRACK_STEPS = ["Driver assigned", "Arriving at pickup point", "Trip started", "Destination reached"];
 
-// STUNNING SIMULATED MAP CANVAS WITH ANIMATED LIVE DRIVERS & ROUTE TRACE
-function MapCanvas({ pickup, drop }: { pickup: string; drop: string }) {
-  return (
-    <div className="relative h-60 sm:h-72 w-full overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-slate-900 shadow-md select-none">
-      {/* Dark/Light Stylized Grid Pattern */}
-      <div
-        className="absolute inset-0 opacity-25"
-        style={{
-          backgroundImage:
-            "linear-gradient(0deg, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "36px 36px",
-        }}
-      />
-
-      {/* Simulated Roads & Street Curves */}
-      <svg className="absolute inset-0 h-full w-full opacity-30 stroke-emerald-400" fill="none">
-        <path d="M 40 180 Q 180 80 340 140 T 600 60" strokeWidth="4" strokeDasharray="8 8" />
-        <path d="M 100 240 Q 280 160 480 200" strokeWidth="3" />
-      </svg>
-
-      {/* Live Drivers Floating on Map */}
-      <motion.div
-        className="absolute flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-black text-white shadow-lg backdrop-blur"
-        initial={{ left: "18%", top: "60%" }}
-        animate={{ left: ["18%", "28%", "22%"], top: ["60%", "45%", "55%"] }}
-        transition={{ duration: 8, repeat: Infinity, repeatType: "reverse" }}
-      >
-        🛵 2 min away
-      </motion.div>
-
-      <motion.div
-        className="absolute flex items-center gap-1 rounded-full bg-amber-500/90 px-2 py-0.5 text-[10px] font-black text-white shadow-lg backdrop-blur"
-        initial={{ left: "55%", top: "30%" }}
-        animate={{ left: ["55%", "65%", "50%"], top: ["30%", "40%", "25%"] }}
-        transition={{ duration: 7, repeat: Infinity, repeatType: "reverse" }}
-      >
-        🛺 3 min away
-      </motion.div>
-
-      <motion.div
-        className="absolute flex items-center gap-1 rounded-full bg-blue-500/90 px-2 py-0.5 text-[10px] font-black text-white shadow-lg backdrop-blur"
-        initial={{ left: "75%", top: "65%" }}
-        animate={{ left: ["75%", "68%", "78%"], top: ["65%", "75%", "60%"] }}
-        transition={{ duration: 9, repeat: Infinity, repeatType: "reverse" }}
-      >
-        🚕 4 min away
-      </motion.div>
-
-      {/* Pickup Location Marker (Green Dot) */}
-      <div className="absolute left-8 top-14 flex items-center gap-2">
-        <div className="relative flex size-5 items-center justify-center">
-          <span className="absolute size-5 rounded-full bg-emerald-500/40 animate-ping" />
-          <span className="size-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-        </div>
-        <span className="rounded-xl bg-slate-950/80 px-2.5 py-1 text-[10px] font-extrabold text-white border border-emerald-500/40 shadow-sm backdrop-blur">
-          📍 {pickup ? pickup.split(",")[0] : "Koramangala, Bengaluru"}
-        </span>
-      </div>
-
-      {/* Destination Marker (Red Dot) */}
-      <div className="absolute right-8 bottom-10 flex items-center gap-2">
-        <div className="relative flex size-5 items-center justify-center">
-          <span className="absolute size-5 rounded-full bg-rose-500/40 animate-ping" />
-          <span className="size-3 rounded-full bg-rose-500 ring-2 ring-white" />
-        </div>
-        <span className="rounded-xl bg-slate-950/80 px-2.5 py-1 text-[10px] font-extrabold text-white border border-rose-500/40 shadow-sm backdrop-blur">
-          🏁 {drop ? drop.split(",")[0] : "Set Destination"}
-        </span>
-      </div>
-
-      {/* Live Nearby Drivers Badge */}
-      <div className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-slate-950/80 px-3 py-1.5 text-xs font-bold text-emerald-400 border border-emerald-500/30 backdrop-blur shadow-sm">
-        <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span>14 Drivers live nearby · Zero Surge Pricing</span>
-      </div>
-    </div>
-  );
-}
+// Extended Uber/Rapido Ride Categories
+const EXPANDED_RIDE_OPTIONS = [
+  {
+    id: "bike",
+    name: "Rapido Bike Taxi",
+    tagline: "Fastest single rider trip",
+    badge: "⚡ FASTEST",
+    badgeBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-400/40",
+    emoji: "🛵",
+    seats: 1,
+    desc: "Beat the traffic · Helmets provided",
+    base: 20,
+    perKm: 10,
+    etaMin: 2,
+    discountPct: 30,
+  },
+  {
+    id: "auto",
+    name: "Loco Auto (Electric)",
+    tagline: "Zero surge guaranteed",
+    badge: "🌱 ECO CHOICE",
+    badgeBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-400/40",
+    emoji: "🛺",
+    seats: 3,
+    desc: "Comfortable 3-wheeler · Upfront fare",
+    base: 30,
+    perKm: 14,
+    etaMin: 3,
+    discountPct: 20,
+  },
+  {
+    id: "ubergo",
+    name: "UberGo AC Cab",
+    tagline: "Affordable AC hatchbacks",
+    badge: "❄️ AC CAB",
+    badgeBg: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-400/40",
+    emoji: "🚗",
+    seats: 4,
+    desc: "Pocket-friendly compact cars",
+    base: 60,
+    perKm: 18,
+    etaMin: 4,
+    discountPct: 15,
+  },
+  {
+    id: "sedan",
+    name: "Uber Premier Sedan",
+    tagline: "Top-rated drivers & comfort",
+    badge: "👑 PREMIER",
+    badgeBg: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-400/40",
+    emoji: "🚘",
+    seats: 4,
+    desc: "Spacious sedans · Extra legroom",
+    base: 90,
+    perKm: 24,
+    etaMin: 5,
+    discountPct: 10,
+  },
+];
 
 function RidesPage() {
-  const defaultPickup = (SAVED_PLACES && SAVED_PLACES.length > 0 && SAVED_PLACES[0]?.address)
-    ? SAVED_PLACES[0].address
-    : "Koramangala 5th Block, Bengaluru";
-
-  const defaultVehicle = (RIDE_OPTIONS && RIDE_OPTIONS.length > 0 && RIDE_OPTIONS[0]?.id)
-    ? RIDE_OPTIONS[0].id
-    : "auto";
+  const defaultPickup =
+    navaStore.getActiveLocation() ||
+    (SAVED_PLACES && SAVED_PLACES.length > 0 && SAVED_PLACES[0]?.address) ||
+    "Narasa Agraharam, Bhimavaram";
 
   const [pickup, setPickup] = useState<string>(defaultPickup);
   const [drop, setDrop] = useState<string>("");
   const [stage, setStage] = useState<Stage>("locate");
-  const [vehicle, setVehicle] = useState<string>(defaultVehicle);
-  const [payment, setPayment] = useState<string>("LocoMart Wallet");
+  const [vehicle, setVehicle] = useState<string>("auto");
+  const [payment, setPayment] = useState<string>("UPI / GPay");
+  const [couponApplied, setCouponApplied] = useState<boolean>(true);
   const [step, setStep] = useState<number>(0);
   const [rating, setRating] = useState<number>(0);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
-  const km = useMemo(() => haversineKm(pickup + drop), [pickup, drop]);
-  
+  const km = useMemo(() => Math.max(3.2, haversineKm(pickup + drop)), [pickup, drop]);
+
   const quotes = useMemo(() => {
-    return (RIDE_OPTIONS ?? []).map((o) => ({
-      ...o,
-      fare: Math.round(o.base + o.perKm * km),
-      trip: Math.max(6, Math.round(km * 3)),
-    }));
-  }, [km]);
+    return EXPANDED_RIDE_OPTIONS.map((o) => {
+      const originalFare = Math.round(o.base + o.perKm * km);
+      const discount = couponApplied ? 50 : 0;
+      const finalFare = Math.max(25, originalFare - discount);
+      return {
+        ...o,
+        originalFare,
+        fare: finalFare,
+        trip: Math.max(5, Math.round(km * 3)),
+      };
+    });
+  }, [km, couponApplied]);
 
   const chosen = useMemo(() => {
-    return quotes.find((q) => q.id === vehicle) ?? quotes[0] ?? {
-      id: "auto",
-      name: "Loco Auto",
-      emoji: "🛺",
-      seats: 3,
-      desc: "Zero surge guarantee",
-      base: 30,
-      perKm: 15,
-      etaMin: 3,
-      fare: 75,
-      trip: 12,
-    };
+    return (
+      quotes.find((q) => q.id === vehicle) ||
+      quotes[1] ||
+      quotes[0] || {
+        id: "auto",
+        name: "Loco Auto (Electric)",
+        tagline: "Zero surge guaranteed",
+        badge: "🌱 ECO CHOICE",
+        badgeBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-400/40",
+        emoji: "🛺",
+        seats: 3,
+        desc: "Comfortable 3-wheeler · Upfront fare",
+        base: 30,
+        perKm: 14,
+        etaMin: 3,
+        discountPct: 20,
+        originalFare: 80,
+        fare: 50,
+        trip: 10,
+      }
+    );
   }, [quotes, vehicle]);
 
   const driver = useMemo(() => {
     const idx = Math.max(0, quotes.findIndex((q) => q.id === vehicle));
     const driversList = DRIVERS ?? [];
-    return driversList[idx % Math.max(1, driversList.length)] ?? {
-      name: "Rajesh Kumar",
-      rating: 4.9,
-      model: "Bajaj RE Auto",
-      vehicle: "KA 01 AB 1234",
-      phone: "+91 98765 43210",
-    };
+    return (
+      driversList[idx % Math.max(1, driversList.length)] ?? {
+        name: "Rajesh Kumar",
+        rating: 4.9,
+        model: "Bajaj RE Auto",
+        vehicle: "AP 37 AB 9876",
+        phone: "+91 98765 43210",
+      }
+    );
   }, [quotes, vehicle]);
 
   const advance = () => {
@@ -196,384 +198,599 @@ function RidesPage() {
     });
   };
 
+  async function handleAutoDetectGPS() {
+    setGpsLoading(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+            );
+            const data = await res.json();
+            if (data && data.address) {
+              const addr = data.address;
+              const road = addr.road || addr.suburb || addr.neighbourhood || "";
+              const area = addr.suburb || addr.village || addr.county || "";
+              const city = addr.city || addr.town || addr.municipality || "";
+              const parts = [road, area, city].filter(Boolean);
+              const formatted = parts.length > 0 ? parts.join(", ") : data.display_name;
+              setPickup(formatted);
+              navaStore.setActiveLocation(formatted);
+              setGpsLoading(false);
+              return;
+            }
+          } catch {
+            // Fallback
+          }
+          const fallback = `GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+          setPickup(fallback);
+          navaStore.setActiveLocation(fallback);
+          setGpsLoading(false);
+        },
+        () => {
+          setGpsLoading(false);
+        }
+      );
+    } else {
+      setGpsLoading(false);
+    }
+  }
+
+  function handleSelectDestination(destinationAddress: string) {
+    setDrop(destinationAddress);
+    setStage("select"); // Move to Screen 2 (Map & Vehicles)
+  }
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (drop.trim().length > 0) {
+      setStage("select"); // Move to Screen 2
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:py-8 text-foreground">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:py-8 text-slate-900 dark:text-white select-none">
       {/* 1. TOP SERVICE CATEGORY SWITCHER */}
       <ServiceCategorySwitcher activeService="ride" />
-      {/* Top Title & Subtitle */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-700/60 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">LocoMart Rides</h1>
-            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-400/40">
-              ⚡ Zero Surge Guarantee
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Upfront fares for bikes, autos and cabs. Fast 2-5 min pickups across Bengaluru.
-          </p>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setPickup("Flat 402, Prestige Elm, Koramangala 5th Block, Bengaluru");
-            toast.success("GPS Auto-detected location!");
-          }}
-          className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500 hover:text-white transition-all shadow-2xs"
-        >
-          <FiCrosshair className="size-3.5" /> Auto-Detect Current Location
-        </button>
-      </header>
+      {/* ========================================================= */}
+      {/* SCREEN 1: UBER-STYLE "WHERE TO?" LOCATION SELECTOR (NO MAP) */}
+      {/* ========================================================= */}
+      {stage === "locate" && (
+        <div className="mx-auto max-w-xl space-y-6">
+          {/* HEADER */}
+          <header className="text-center space-y-1">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-black text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              ⚡ Zero Surge Guarantee · Instant Pickup
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+              Where can we take you?
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+              Book Rapido bikes, electric autos and AC cabs across your city.
+            </p>
+          </header>
 
-      {/* INTERACTIVE STUNNING SIMULATED MAP CANVAS */}
-      <MapCanvas pickup={pickup} drop={drop} />
+          {/* UBER SIGNATURE LOCATION INPUT CARD */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-2xl space-y-6"
+          >
+            <form onSubmit={handleSearchSubmit} className="space-y-4">
+              {/* VERTICAL CONNECTOR INPUTS */}
+              <div className="relative space-y-3">
+                {/* Connecting vertical dashed line */}
+                <div className="absolute left-[19px] top-[32px] bottom-[32px] w-0.5 border-l-2 border-dashed border-slate-300 dark:border-slate-700 z-0" />
 
-      {/* RIDE BOOKING PANEL (2-Column Layout) */}
-      {stage === "locate" || stage === "select" || stage === "confirm" ? (
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* LEFT SIDE: Pickup & Destination Inputs */}
-          <section className="space-y-5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 p-5 sm:p-6 shadow-xs lg:col-span-6">
-            <div className="space-y-3.5">
-              {/* Pickup Input */}
-              <div>
-                <label className="mb-1 flex items-center justify-between text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
-                  <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                    <FiNavigation className="size-4" /> Pickup Location
-                  </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">● Current GPS Pin</span>
-                </label>
-                <div className="relative">
-                  <input
-                    value={pickup}
-                    onChange={(e) => setPickup(e.target.value)}
-                    className="h-11 w-full rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-3.5 text-xs font-bold text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Destination Input */}
-              <div>
-                <label className="mb-1 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-rose-500">
-                  <FiMapPin className="size-4" /> Destination
-                </label>
-                <div className="relative">
-                  <input
-                    value={drop}
-                    onChange={(e) => {
-                      setDrop(e.target.value);
-                      setStage(e.target.value.trim() ? "select" : "locate");
-                    }}
-                    placeholder="Where to? (e.g. Indiranagar, MG Road, Airport)"
-                    className="h-11 w-full rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-3.5 text-xs font-bold text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-muted-foreground"
-                  />
-                  {drop ? (
+                {/* PICKUP LOCATION INPUT */}
+                <div className="relative z-10 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                    <span>PICKUP LOCATION</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setDrop("");
-                        setStage("locate");
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground hover:text-foreground"
+                      onClick={handleAutoDetectGPS}
+                      className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1 hover:underline cursor-pointer"
                     >
-                      ✕
+                      <FiCrosshair className="size-3" />
+                      <span>{gpsLoading ? "Detecting..." : "● LIVE GPS"}</span>
                     </button>
-                  ) : null}
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 p-3 shadow-2xs focus-within:border-emerald-500 transition-all">
+                    <span className="grid size-7 place-items-center rounded-full bg-emerald-500 text-white shrink-0 shadow-xs">
+                      <FiNavigation className="size-3.5" />
+                    </span>
+                    <input
+                      type="text"
+                      value={pickup}
+                      onChange={(e) => setPickup(e.target.value)}
+                      placeholder="Enter pickup address"
+                      className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                {/* DESTINATION INPUT */}
+                <div className="relative z-10 space-y-1">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                    WHERE ARE YOU HEADING?
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl border-2 border-rose-400/80 dark:border-rose-500/60 bg-slate-100 dark:bg-slate-800 p-3 shadow-md focus-within:border-rose-500 transition-all">
+                    <span className="grid size-7 place-items-center rounded-full bg-rose-500 text-white shrink-0 shadow-xs">
+                      <FiMapPin className="size-3.5" />
+                    </span>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={drop}
+                      onChange={(e) => setDrop(e.target.value)}
+                      placeholder="Enter destination (e.g. Airport, Market, Street)"
+                      className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    />
+                    {drop && (
+                      <button
+                        type="button"
+                        onClick={() => setDrop("")}
+                        className="size-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-300 transition-colors cursor-pointer shrink-0"
+                      >
+                        <FiX className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Saved Places Shortcuts */}
-            <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700/50">
-              <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+              {/* PROMINENT "SEE PRICES & MAP" BUTTON */}
+              <button
+                type="submit"
+                disabled={!drop.trim()}
+                className={`w-full h-13 rounded-2xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2.5 shadow-lg ${
+                  drop.trim()
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                    : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none"
+                }`}
+              >
+                <span>Find Rides & See Map</span>
+                <FiArrowRight className="size-4.5" />
+              </button>
+            </form>
+
+            {/* SAVED PLACES SHORTCUTS (1-CLICK DIRECT TO SCREEN 2) */}
+            <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-white/10">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
                 SAVED PLACES
               </span>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-3 gap-2.5">
                 {(SAVED_PLACES ?? []).map((p) => (
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      setDrop(p.address);
-                      setStage("select");
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 px-3 py-1.5 text-xs font-bold text-foreground hover:border-emerald-500 hover:bg-emerald-500/10 transition-all shadow-2xs"
+                    onClick={() => handleSelectDestination(p.address)}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/80 hover:border-emerald-500 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-all cursor-pointer space-y-1.5 group"
                   >
-                    <span>{p.label === "Home" ? "🏠" : p.label === "Work" ? "🏢" : "📍"}</span>
-                    <span>{p.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Places */}
-            <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700/50">
-              <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                RECENT DESTINATIONS
-              </span>
-              <ul className="space-y-1.5">
-                {(RECENT_PLACES ?? []).map((r) => (
-                  <li key={r}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDrop(r);
-                        setStage("select");
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-left text-xs font-semibold text-foreground hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      <FiMapPin className="shrink-0 text-emerald-600 dark:text-emerald-400 size-4" />
-                      <span className="line-clamp-1">{r}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-
-          {/* RIGHT SIDE: Ride Vehicle Selector Cards */}
-          <section className="space-y-4 lg:col-span-6">
-            {stage === "locate" ? (
-              <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800/60 p-10 text-center space-y-3">
-                <span className="grid size-14 place-items-center rounded-full bg-emerald-500/10 text-2xl text-emerald-600 dark:text-emerald-400 mx-auto">
-                  🛺
-                </span>
-                <h3 className="text-base font-extrabold text-foreground">Where are you heading today?</h3>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  Select a destination or tap on any saved location to compare fares for Bike, Auto, and AC Cabs.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-extrabold text-foreground">Available Ride Options</h3>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{km} km route</span>
-                </div>
-
-                {/* Ride Vehicle Cards */}
-                <div className="space-y-2.5">
-                  {quotes.map((q) => {
-                    const active = vehicle === q.id;
-                    return (
-                      <button
-                        key={q.id}
-                        type="button"
-                        onClick={() => setVehicle(q.id)}
-                        className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-all ${
-                          active
-                            ? "border-emerald-500 bg-emerald-500/10 shadow-xs ring-2 ring-emerald-500/30"
-                            : "border-slate-200 dark:border-slate-700/70 bg-white/90 dark:bg-slate-800/60 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-700/60"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3.5">
-                          <span className="grid size-12 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-700 text-2xl shrink-0">
-                            {q.emoji}
-                          </span>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-black text-foreground">{q.name}</h4>
-                              <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[9px] font-bold text-muted-foreground">
-                                👥 {q.seats} seats
-                              </span>
-                            </div>
-                             <p className="text-xs text-muted-foreground mt-0.5">
-                               {q.desc} · <b className="text-emerald-600 dark:text-emerald-400 font-extrabold">{q.etaMin} min away</b>
-                             </p>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                           <span className="text-base font-black text-foreground">{currency(q.fare)}</span>
-                           <span className="block text-[10px] text-muted-foreground">No Surge</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Payment Methods & Book Button */}
-                <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 p-4 space-y-3.5 shadow-2xs">
-                  <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1.5">
-                      PAYMENT METHOD
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {["LocoMart Wallet", "UPI / GPay", "Cash", "Credit Card"].map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setPayment(p)}
-                          className={`rounded-full border px-3 py-1 text-xs font-extrabold transition-all ${
-                            payment === p
-                              ? "border-emerald-500 bg-emerald-500 text-white shadow-2xs"
-                              : "border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStage("assigned");
-                      setStep(0);
-                      toast.success(`${chosen.name} booked! Driver assigned.`);
-                    }}
-                    className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-3.5 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Book {chosen.name} · {currency(chosen.fare)}</span>
-                    <FiArrowRight className="size-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
-      ) : null}
-
-      {/* DRIVER ASSIGNED & LIVE TRACKING PANEL */}
-      <AnimatePresence>
-        {stage === "assigned" || stage === "ontrip" ? (
-          <motion.section
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="rounded-3xl border border-emerald-500/30 bg-white/95 dark:bg-slate-800/70 p-6 space-y-6 shadow-xl"
-          >
-            {/* Driver Profile Card */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700/50 pb-4">
-              <div className="flex items-center gap-3.5">
-                <div className="grid size-14 place-items-center rounded-2xl bg-emerald-500/10 text-2xl text-emerald-600 font-bold border border-emerald-300/40">
-                  👨‍✈️
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-foreground">{driver.name}</h3>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600">
-                      <FiStar className="fill-amber-400 text-amber-400" /> {driver.rating}
+                    <span className="text-2xl group-hover:scale-110 transition-transform">
+                      {p.label === "Home" ? "🏠" : p.label === "Work" ? "🏢" : "📍"}
                     </span>
-                  </div>
-                   <p className="text-xs text-muted-foreground mt-0.5">
-                     {driver.model} · <b className="text-foreground">{driver.vehicle}</b>
-                   </p>
-                </div>
-              </div>
-
-              {/* OTP & Action Buttons */}
-              <div className="flex items-center gap-2">
-                <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 text-center">
-                   <span className="text-[10px] font-bold text-muted-foreground uppercase block">OTP CODE</span>
-                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 tracking-wider">4821</span>
-                </div>
-
-                <a
-                  href={`tel:${driver.phone.replace(/\s/g, "")}`}
-                  className="grid size-10 place-items-center rounded-2xl bg-emerald-600 text-white shadow-xs hover:scale-105 transition-transform"
-                  title="Call Driver"
-                >
-                  <FiPhone className="size-4.5" />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => toast.info("Opening live chat with " + driver.name)}
-                  className="grid size-10 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-700 text-foreground hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-                  title="Chat with Driver"
-                >
-                  <FiMessageSquare className="size-4.5" />
-                </button>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-200">{p.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Live Track Steps Timeline */}
-            <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {TRACK_STEPS.map((s, i) => {
-                const active = i <= step;
-                return (
-                  <li
-                    key={s}
-                    className={`rounded-2xl border p-3 text-center space-y-1 transition-all ${
-                      active
-                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-extrabold"
-                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-muted-foreground"
-                    }`}
+            {/* RECENT SEARCHES (1-CLICK DIRECT TO SCREEN 2) */}
+            <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-white/10">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                RECENT SEARCHES
+              </span>
+              <div className="space-y-2">
+                {(RECENT_PLACES ?? []).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => handleSelectDestination(r)}
+                    className="w-full flex items-center gap-3.5 p-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-slate-800/60 text-left hover:bg-emerald-500/10 dark:hover:bg-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer group"
                   >
-                    <span className={`inline-block size-2 rounded-full ${active ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
-                    <p className="text-xs font-bold leading-tight">{s}</p>
-                  </li>
-                );
-              })}
-            </ol>
-
-            {/* Simulation Controls */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                type="button"
-                onClick={advance}
-                className="flex-1 rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-3 text-xs font-black text-white shadow-md transition-colors"
-              >
-                {step < TRACK_STEPS.length - 1 ? "Simulate Next Tracking Step →" : "Complete Trip"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setStage("select");
-                  toast.info("Ride cancelled. Zero charges applied.");
-                }}
-                className="inline-flex items-center gap-1.5 rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                <FiX className="size-4" /> Cancel Ride
-              </button>
+                    <span className="grid size-9 place-items-center rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                      <FiClock className="size-4" />
+                    </span>
+                    <div className="overflow-hidden flex-1">
+                      <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate block">
+                        {r}
+                      </span>
+                    </div>
+                    <FiArrowRight className="size-4 text-slate-400 group-hover:text-emerald-500 transition-colors shrink-0" />
+                  </button>
+                ))}
+              </div>
             </div>
-          </motion.section>
-        ) : null}
-      </AnimatePresence>
+          </motion.div>
+        </div>
+      )}
 
-      {/* RIDE COMPLETED SUMMARY */}
-      {stage === "done" ? (
-        <section className="space-y-6 rounded-3xl border border-emerald-500/30 bg-white/95 dark:bg-slate-800/70 p-6 shadow-xl">
-          <div className="flex items-center gap-3">
-            <span className="grid size-12 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-600 text-2xl font-bold">
-              🎉
-            </span>
-            <div>
-              <h2 className="text-lg font-black text-foreground">Trip Completed!</h2>
-              <p className="text-xs text-muted-foreground">You reached your destination safely with LocoMart Rides.</p>
+      {/* ========================================================= */}
+      {/* SCREEN 2: UBER-STYLE INTERACTIVE MAP & RIDE SELECTION */}
+      {/* ========================================================= */}
+      {(stage === "select" || stage === "confirm") && (
+        <div className="space-y-6">
+          {/* TOP ROUTE BAR WITH BACK BUTTON */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-white/10 shadow-md">
+            <button
+              type="button"
+              onClick={() => setStage("locate")}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors cursor-pointer"
+            >
+              <FiArrowLeft className="size-4" />
+              <span>Change Location</span>
+            </button>
+
+            {/* ROUTE SUMMARY BADGE */}
+            <div className="flex items-center gap-2 text-xs font-black max-w-md truncate">
+              <span className="text-emerald-600 dark:text-emerald-400 truncate">
+                🟢 {pickup.split(",")[0] || pickup}
+              </span>
+              <span className="text-slate-400">➔</span>
+              <span className="text-rose-600 dark:text-rose-400 truncate">
+                🔴 {drop.split(",")[0] || drop}
+              </span>
+            </div>
+
+            <div className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+              {km} km route
             </div>
           </div>
 
-          <dl className="space-y-2 text-xs border-y border-slate-200 dark:border-slate-700/50 py-3">
+          {/* INTERACTIVE LEAFLET & OPENSTREETMAP CANVAS */}
+          <InteractiveRideMap
+            pickup={pickup}
+            drop={drop}
+            stage={stage}
+            selectedVehicle={vehicle}
+            onPickupChange={(newPickup) => setPickup(newPickup)}
+            onDropChange={(newDrop) => setDrop(newDrop)}
+          />
+
+          {/* 2-COLUMN VEHICLES & CONFIRMATION PANEL */}
+          <div className="grid gap-6 lg:grid-cols-12">
+            {/* LEFT COLUMN: VEHICLE OPTIONS CARDS */}
+            <section className="space-y-3 lg:col-span-7">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-base font-black text-slate-900 dark:text-white">
+                  Available Rides ({quotes.length})
+                </h2>
+                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <FiShield className="size-3.5" /> Zero Surge Guaranteed
+                </span>
+              </div>
+
+              {quotes.map((q) => {
+                const active = vehicle === q.id;
+                return (
+                  <motion.button
+                    key={q.id}
+                    type="button"
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setVehicle(q.id)}
+                    className={`flex w-full items-center justify-between rounded-3xl border p-4.5 text-left transition-all cursor-pointer ${
+                      active
+                        ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 shadow-md ring-2 ring-emerald-500/30"
+                        : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-emerald-500/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* VEHICLE EMOJI ICON BADGE */}
+                      <div className="relative grid size-14 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-3xl shrink-0 shadow-2xs">
+                        {q.emoji}
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                            {q.name}
+                          </h3>
+                          <span className={`rounded-full px-2 py-0.5 text-[9px] font-black border ${q.badgeBg}`}>
+                            {q.badge}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          {q.desc}
+                        </p>
+
+                        <div className="flex items-center gap-2 pt-0.5 text-[11px] font-extrabold">
+                          <span className="text-emerald-600 dark:text-emerald-400">
+                            ⏱️ {q.etaMin} mins away
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            👥 {q.seats} seats
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* FARE & PRICING */}
+                    <div className="text-right shrink-0">
+                      <div className="flex items-center gap-1.5 justify-end">
+                        {couponApplied && (
+                          <span className="text-xs font-bold text-slate-400 line-through">
+                            {currency(q.originalFare)}
+                          </span>
+                        )}
+                        <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                          {currency(q.fare)}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                        NO SURGE
+                      </span>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </section>
+
+            {/* RIGHT COLUMN: PAYMENT & CONFIRM BOOKING */}
+            <section className="space-y-4 lg:col-span-5">
+              <div className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-5 space-y-4 shadow-xl dark:shadow-none">
+                {/* PROMO COUPON ROW */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300">
+                    <FiTag className="size-4 text-emerald-500" />
+                    <span>PROMO 'LOCO50' (₹50 OFF)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCouponApplied(!couponApplied)}
+                    className="text-xs font-black text-emerald-600 dark:text-emerald-400 underline cursor-pointer"
+                  >
+                    {couponApplied ? "Remove" : "Apply"}
+                  </button>
+                </div>
+
+                {/* PAYMENT METHOD SELECTOR */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                    PAYMENT METHOD
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["UPI / GPay", "Cash", "Loco Wallet", "Credit Card"].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPayment(p)}
+                        className={`p-2.5 rounded-2xl border text-xs font-black transition-all cursor-pointer text-center ${
+                          payment === p
+                            ? "border-emerald-500 bg-emerald-500 text-white shadow-md"
+                            : "border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* FARE BREAKDOWN */}
+                <div className="space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/10 text-xs">
+                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                    <span>Base & Distance Fare</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{currency(chosen.originalFare)}</span>
+                  </div>
+                  {couponApplied && (
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                      <span>Promo Discount</span>
+                      <span>- ₹50</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-1 border-t border-slate-100 dark:border-white/5">
+                    <span>Total Payable</span>
+                    <span className="text-base text-emerald-600 dark:text-emerald-400">{currency(chosen.fare)}</span>
+                  </div>
+                </div>
+
+                {/* UBER / RAPIDO CONFIRM BOOKING CTA BUTTON */}
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setStage("assigned");
+                    setStep(0);
+                  }}
+                  className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                >
+                  <span>Request {chosen.name}</span>
+                  <FiArrowRight className="size-5" />
+                </motion.button>
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* SCREEN 3: DRIVER ASSIGNED & LIVE TRACKING SCREEN */}
+      {/* ========================================================= */}
+      <AnimatePresence>
+        {(stage === "assigned" || stage === "ontrip") && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            {/* LIVE TRACKING MAP */}
+            <InteractiveRideMap
+              pickup={pickup}
+              drop={drop}
+              stage={stage}
+              selectedVehicle={vehicle}
+            />
+
+            {/* DRIVER HEADER PROFILE CARD */}
+            <div className="rounded-3xl border border-emerald-500/30 bg-white dark:bg-slate-900 p-6 space-y-6 shadow-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-5">
+                <div className="flex items-center gap-4">
+                  <div className="relative grid size-16 place-items-center rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-600 text-3xl text-white font-bold shadow-lg shadow-emerald-500/20">
+                    👨‍✈️
+                    <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-[10px]">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                        {driver.name}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-400/30">
+                        <FiStar className="fill-amber-400 text-amber-400 size-3.5" /> {driver.rating}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                      {driver.model} · <b className="text-slate-900 dark:text-white uppercase tracking-wider">{driver.vehicle}</b>
+                    </p>
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1">
+                      <FiUserCheck className="size-3.5" /> Verified Captain · 2,400+ Completed Trips
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4-DIGIT PIN OTP & QUICK CALL/CHAT BUTTONS */}
+                <div className="flex items-center gap-3">
+                  <div className="rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/40 px-4 py-2 text-center shadow-xs">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                      START TRIP PIN
+                    </span>
+                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-widest">
+                      4821
+                    </span>
+                  </div>
+
+                  <a
+                    href={`tel:${driver.phone.replace(/\s/g, "")}`}
+                    className="grid size-12 place-items-center rounded-2xl bg-emerald-600 text-white shadow-md hover:bg-emerald-700 transition-all cursor-pointer"
+                    title="Call Captain"
+                  >
+                    <FiPhone className="size-5" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => alert("Connecting live chat with " + driver.name)}
+                    className="grid size-12 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    title="Chat with Captain"
+                  >
+                    <FiMessageSquare className="size-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* LIVE STEP TIMELINE */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                  TRIP PROGRESS
+                </span>
+                <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {TRACK_STEPS.map((s, i) => {
+                    const active = i <= step;
+                    return (
+                      <li
+                        key={s}
+                        className={`rounded-2xl border p-3.5 text-center space-y-1.5 transition-all ${
+                          active
+                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black shadow-xs"
+                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 text-slate-400"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block size-2.5 rounded-full ${
+                            active ? "bg-emerald-500 animate-pulse" : "bg-slate-300 dark:bg-slate-700"
+                          }`}
+                        />
+                        <p className="text-xs font-extrabold leading-tight">{s}</p>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+
+              {/* SIMULATION STEP CONTROLS */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={advance}
+                  className="flex-1 h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>{step < TRACK_STEPS.length - 1 ? "Simulate Next Tracking Step →" : "Complete Trip"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStage("select");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-5 h-13 text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                >
+                  <FiX className="size-4" /> Cancel Ride
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================= */}
+      {/* SCREEN 4: RIDE COMPLETED SUMMARY */}
+      {/* ========================================================= */}
+      {stage === "done" && (
+        <section className="space-y-6 rounded-3xl border border-emerald-500/30 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-2xl">
+          <div className="flex items-center gap-4">
+            <span className="grid size-14 place-items-center rounded-3xl bg-emerald-500/10 text-emerald-600 text-3xl font-bold border border-emerald-500/30">
+              🎉
+            </span>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Trip Completed!</h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+                You reached your destination safely with Loco Rides.
+              </p>
+            </div>
+          </div>
+
+          <dl className="space-y-2.5 text-xs sm:text-sm border-y border-slate-200 dark:border-white/10 py-4">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Vehicle Fare ({chosen.name})</dt>
-              <dd className="font-bold text-foreground">{currency(chosen.fare)}</dd>
+              <dt className="text-slate-500 dark:text-slate-400 font-semibold">Vehicle Type ({chosen.name})</dt>
+              <dd className="font-extrabold text-slate-900 dark:text-white">{currency(chosen.fare)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Distance Travelled</dt>
-              <dd className="font-bold text-foreground">{km} km</dd>
+              <dt className="text-slate-500 dark:text-slate-400 font-semibold">Distance Travelled</dt>
+              <dd className="font-extrabold text-slate-900 dark:text-white">{km} km</dd>
             </div>
-            <div className="flex justify-between pt-1 font-black text-sm text-foreground">
-              <dt>Paid via {payment}</dt>
+            <div className="flex justify-between pt-1 font-black text-base text-slate-900 dark:text-white">
+              <dt>Total Paid via {payment}</dt>
               <dd className="text-emerald-600 dark:text-emerald-400">{currency(chosen.fare)}</dd>
             </div>
           </dl>
 
           {/* Rate Driver */}
           <div className="text-center space-y-2">
-            <p className="text-xs font-bold text-foreground">Rate your driver {driver.name}</p>
-            <div className="flex justify-center gap-1.5">
+            <p className="text-xs font-black text-slate-900 dark:text-white">Rate Captain {driver.name}</p>
+            <div className="flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => {
                     setRating(n);
-                    toast.success("Thank you for rating your driver!");
                   }}
-                  className="p-1 transition-transform hover:scale-125"
+                  className="p-1 transition-transform hover:scale-125 cursor-pointer"
                 >
-                  <FiStar className={`size-6 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-border"}`} />
+                  <FiStar
+                    className={`size-7 ${
+                      n <= rating ? "fill-amber-400 text-amber-400" : "text-slate-300 dark:text-slate-700"
+                    }`}
+                  />
                 </button>
               ))}
             </div>
@@ -586,12 +803,12 @@ function RidesPage() {
               setDrop("");
               setRating(0);
             }}
-            className="w-full rounded-2xl bg-emerald-600 py-3 text-xs font-black text-white hover:bg-emerald-700 transition-colors shadow-xs"
+            className="w-full h-13 rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white hover:bg-emerald-700 transition-colors shadow-md cursor-pointer"
           >
             Book Another Ride
           </button>
         </section>
-      ) : null}
+      )}
     </div>
   );
 }
