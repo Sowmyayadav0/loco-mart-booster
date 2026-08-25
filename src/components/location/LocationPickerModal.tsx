@@ -93,23 +93,23 @@ export function LocationPickerModal({ isOpen, onClose, onSelectLocation }: Locat
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-background border border-border p-5 sm:p-6 shadow-2xl space-y-5 no-scrollbar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl bg-slate-900 border border-white/20 p-5 sm:p-6 shadow-[0_25px_70px_-10px_rgba(0,0,0,0.9)] space-y-5 text-white no-scrollbar">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-border/50 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="grid size-9 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-600 font-bold">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-2xl bg-cyan-500/20 border border-cyan-400/30 text-cyan-400 font-bold shadow-xs">
               <FiMapPin className="size-5" />
             </span>
             <div>
-              <h2 className="text-base font-extrabold text-foreground">Select Delivery Location</h2>
-              <p className="text-xs text-muted-foreground">High-Accuracy GPS & Saved Addresses</p>
+              <h2 className="text-base sm:text-lg font-black text-white tracking-tight">Select Delivery Location</h2>
+              <p className="text-xs text-slate-300">High-Accuracy GPS & Saved Addresses</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="rounded-full p-2 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
           >
             <FiX className="size-5" />
           </button>
@@ -120,69 +120,69 @@ export function LocationPickerModal({ isOpen, onClose, onSelectLocation }: Locat
           type="button"
           onClick={handleAutoDetectGPS}
           disabled={loading}
-          className="w-full flex items-center justify-between rounded-2xl border border-emerald-500/50 bg-emerald-500/10 p-4 text-emerald-700 dark:text-emerald-300 shadow-2xs hover:bg-emerald-500 hover:text-white transition-all group"
+          className="w-full flex items-center justify-between rounded-2xl border border-emerald-500/50 bg-emerald-950/60 p-4 text-white shadow-lg hover:bg-emerald-900/80 hover:border-emerald-400 transition-all group cursor-pointer"
         >
-          <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-2xl bg-emerald-600 text-white shrink-0 group-hover:scale-110 transition-transform">
+          <div className="flex items-center gap-3.5">
+            <span className="grid size-10 place-items-center rounded-2xl bg-emerald-500 text-slate-950 font-black shrink-0 group-hover:scale-110 transition-transform shadow-md">
               <FiCrosshair className={`size-5 ${loading ? "animate-spin" : ""}`} />
             </span>
             <div className="text-left">
-              <h3 className="text-xs font-black">Use Current GPS Location</h3>
-              <p className="text-[11px] opacity-80 mt-0.5">Auto-detect high accuracy position</p>
+              <h3 className="text-sm font-black text-white group-hover:text-emerald-300 transition-colors">Use Current GPS Location</h3>
+              <p className="text-xs text-slate-300 mt-0.5">Auto-detect high accuracy position</p>
             </div>
           </div>
-          <span className="rounded-full bg-emerald-600/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider">
+          <span className="rounded-full bg-emerald-400 text-slate-950 px-3 py-1 text-[11px] font-black uppercase tracking-wider shadow-sm">
             {loading ? "Detecting…" : "Auto Detect"}
           </span>
         </button>
 
         {/* SIMULATED MAP PREVIEW WITH PIN */}
-        <div className="relative h-44 w-full overflow-hidden rounded-2xl border border-border bg-slate-900 shadow-inner select-none">
+        <div className="relative h-40 w-full overflow-hidden rounded-2xl border border-white/15 bg-slate-950 shadow-inner select-none">
           <div
-            className="absolute inset-0 opacity-30"
+            className="absolute inset-0 opacity-25"
             style={{
               backgroundImage:
-                "linear-gradient(0deg, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)",
-              backgroundSize: "28px 28px",
+                "linear-gradient(0deg, rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)",
+              backgroundSize: "24px 24px",
             }}
           />
           {/* Centered Map Pin */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <div className="relative flex items-center justify-center">
-              <span className="absolute size-8 rounded-full bg-emerald-500/40 animate-ping" />
-              <span className="grid size-10 place-items-center rounded-full bg-emerald-600 text-white shadow-xl">
+              <span className="absolute size-8 rounded-full bg-cyan-400/40 animate-ping" />
+              <span className="grid size-10 place-items-center rounded-full bg-cyan-500 text-slate-950 font-black shadow-xl text-base">
                 📍
               </span>
             </div>
-            <span className="mt-2 rounded-xl bg-slate-950/90 px-3 py-1 text-[10px] font-black text-emerald-400 border border-emerald-500/40 backdrop-blur shadow-md">
+            <span className="mt-2 rounded-xl bg-slate-900/95 px-3 py-1 text-xs font-black text-cyan-300 border border-cyan-400/40 backdrop-blur shadow-md max-w-[85%] truncate text-center">
               {currentAddress}
             </span>
           </div>
 
-          <div className="absolute bottom-2 left-2 rounded-lg bg-slate-950/80 px-2 py-0.5 text-[9px] text-muted-foreground font-mono">
+          <div className="absolute bottom-2 left-2 rounded-lg bg-slate-900/90 px-2 py-0.5 text-[10px] text-slate-400 font-mono border border-white/10">
             Lat: {coords.lat.toFixed(4)}, Lng: {coords.lng.toFixed(4)}
           </div>
         </div>
 
         {/* SEARCH ADDRESS INPUT */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black uppercase tracking-wider text-slate-300">
             SEARCH AREA / CITY
           </label>
           <div className="relative">
-            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-4" />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4.5" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search area (e.g. Koramangala, Indiranagar, HSR Layout...)"
-              className="h-11 w-full rounded-2xl border border-border bg-muted/40 pl-10 pr-4 text-xs font-bold outline-none focus:border-emerald-500 transition-colors"
+              className="h-11 w-full rounded-2xl border border-white/20 bg-slate-950/80 text-white placeholder:text-slate-400 pl-10 pr-4 text-xs font-bold outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all"
             />
           </div>
         </div>
 
         {/* POPULAR AREAS LIST */}
         <div className="space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
             POPULAR BENGALURU AREAS
           </span>
           <div className="flex flex-wrap gap-2">
@@ -200,7 +200,7 @@ export function LocationPickerModal({ isOpen, onClose, onSelectLocation }: Locat
                   key={area}
                   type="button"
                   onClick={() => handleConfirmLocation(`${area}, Bengaluru`)}
-                  className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground hover:border-emerald-500 hover:bg-emerald-500/10 transition-all shadow-2xs"
+                  className="rounded-full border border-white/15 bg-slate-800/80 px-3 py-1.5 text-xs font-bold text-slate-100 hover:border-cyan-400 hover:bg-cyan-500/20 hover:text-white transition-all shadow-xs cursor-pointer"
                 >
                   📍 {area}
                 </button>
@@ -209,8 +209,8 @@ export function LocationPickerModal({ isOpen, onClose, onSelectLocation }: Locat
         </div>
 
         {/* SAVED ADDRESSES LIST */}
-        <div className="space-y-2 border-t border-border/50 pt-3">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-2 border-t border-white/10 pt-3">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
             SAVED ADDRESSES
           </span>
           <div className="space-y-2">
@@ -221,18 +221,18 @@ export function LocationPickerModal({ isOpen, onClose, onSelectLocation }: Locat
                   key={addr.id}
                   type="button"
                   onClick={() => handleConfirmLocation(full)}
-                  className="w-full flex items-center justify-between rounded-2xl border border-border/70 bg-card p-3 text-left hover:border-emerald-500 transition-colors group"
+                  className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-800/50 p-3 text-left hover:border-cyan-400 hover:bg-slate-800 transition-all group cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="grid size-9 place-items-center rounded-xl bg-muted text-muted-foreground group-hover:bg-emerald-500/10 group-hover:text-emerald-600 transition-colors">
+                    <span className="grid size-9 place-items-center rounded-xl bg-slate-900 text-cyan-400 border border-white/10 group-hover:bg-cyan-500/20 transition-colors">
                       {addr.label === "HOME" ? "🏠" : "🏢"}
                     </span>
                     <div>
-                      <h4 className="text-xs font-black text-foreground">{addr.label}</h4>
-                      <p className="text-[11px] text-muted-foreground line-clamp-1">{full}</p>
+                      <h4 className="text-xs font-black text-white">{addr.label}</h4>
+                      <p className="text-[11px] text-slate-300 line-clamp-1">{full}</p>
                     </div>
                   </div>
-                  <FiCheck className="size-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <FiCheck className="size-4 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
               );
             })}
@@ -243,7 +243,7 @@ export function LocationPickerModal({ isOpen, onClose, onSelectLocation }: Locat
         <button
           type="button"
           onClick={() => handleConfirmLocation(currentAddress)}
-          className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-3.5 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all"
+          className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:opacity-95 py-3.5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/30 hover:scale-[1.01] active:scale-98 transition-all cursor-pointer"
         >
           Confirm Delivery Location
         </button>

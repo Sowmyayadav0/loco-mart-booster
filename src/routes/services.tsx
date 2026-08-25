@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { HOME_SERVICES, PROVIDERS, SERVICE_SLOTS } from "@/lib/verticals";
 import { currency } from "@/utils/format";
+import { ServiceCategorySwitcher } from "@/components/common/ServiceCategorySwitcher";
 
 export const Route = createFileRoute("/services")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -38,11 +39,12 @@ function ServicesPage() {
   if (selected) {
     const pro = PROVIDERS.find((p) => p.id === provider)!;
     return (
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:py-8">
+        <ServiceCategorySwitcher activeService="shop" />
         <button
           type="button"
           onClick={() => navigate({ to: "/services", search: { service: undefined } })}
-          className="text-sm font-semibold text-primary"
+          className="text-sm font-semibold text-primary hover:underline"
         >
           ← All services
         </button>
@@ -135,9 +137,10 @@ function ServicesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 sm:py-8">
+      <ServiceCategorySwitcher activeService="shop" />
       <header>
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Home services</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-foreground">Home services</h1>
         <p className="mt-1 text-muted-foreground">Background-verified pros, upfront pricing, same-day slots.</p>
       </header>
 

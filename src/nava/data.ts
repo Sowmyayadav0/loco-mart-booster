@@ -103,6 +103,14 @@ interface StoreSeed {
 }
 
 const STORE_SEEDS: StoreSeed[] = [
+  { name: "Bawarchi Restaurant", category: "food", emoji: "🍛", cuisines: ["Hyderabadi", "Biryani", "North Indian", "Mughlai"] },
+  { name: "Sri Kanya Restaurant", category: "food", emoji: "🍲", cuisines: ["Andhra", "Biryani", "Seafood", "South Indian"] },
+  { name: "Pista House", category: "food", emoji: "🥘", cuisines: ["Hyderabadi", "Haleem", "Biryani", "Bakery"] },
+  { name: "Chaitanya Food Court", category: "food", emoji: "🥞", cuisines: ["South Indian", "Tiffins", "Andhra Meals", "Filter Coffee"], veg: true },
+  { name: "Leon's Burgers & Wings", category: "food", emoji: "🍔", cuisines: ["Burgers", "Wings", "Fast Food", "Shakes"] },
+  { name: "La Pino'z Pizza", category: "food", emoji: "🍕", cuisines: ["Pizza", "Pastas", "Italian", "Garlic Bread"] },
+  { name: "Santosh Dhaba Exclusive", category: "food", emoji: "🍛", cuisines: ["North Indian", "Mughlai", "Paneer Specials"], veg: true },
+  { name: "The Thick Shake Factory", category: "food", emoji: "🥤", cuisines: ["Desserts", "Beverages", "Milkshakes"] },
   { name: "Deccan Spice House", category: "food", emoji: "🍲", cuisines: ["Hyderabadi", "Biryani", "Mughlai"] },
   { name: "Tandoor Junction", category: "food", emoji: "🍢", cuisines: ["North Indian", "Kebabs"] },
   { name: "Green Leaf Meals", category: "food", emoji: "🥗", cuisines: ["South Indian", "Thali"], veg: true },
@@ -153,18 +161,18 @@ export const STORES: Store[] = STORE_SEEDS.map((s, i) => {
     cuisines: s.cuisines ?? [cat.name],
     area: AREAS[i % AREAS.length]!,
     city: "Hyderabad",
-    rating: Number((3.9 + r * 1).toFixed(1)),
-    ratingCount: 120 + Math.floor(r * 4200),
-    deliveryMins: 12 + Math.floor(r * 38),
+    rating: Number((4.1 + r * 0.8).toFixed(1)),
+    ratingCount: 250 + Math.floor(r * 8200),
+    deliveryMins: 18 + Math.floor(r * 24),
     deliveryFee: [0, 15, 19, 25, 29][Math.floor(r * 5)]!,
     minOrder: [0, 99, 149, 199][Math.floor(r * 4)]!,
-    distanceKm: Number((0.4 + r * 6).toFixed(1)),
+    distanceKm: Number((0.8 + r * 3.5).toFixed(1)),
     emoji: s.emoji,
     hue: cat.hue,
-    openHours: i % 4 === 0 ? "24 hours" : "8:00 AM – 11:30 PM",
-    description: `${s.name} is a trusted ${cat.name.toLowerCase()} partner in ${AREAS[i % AREAS.length]}, known for quality, fair prices and quick NAVA delivery.`,
-    offer: ["Flat ₹75 OFF above ₹399", "20% OFF up to ₹100", "Buy 1 Get 1 on select items", "Free delivery today"][Math.floor(r * 4)]!,
-    trending: r > 0.55,
+    openHours: i % 4 === 0 ? "24 hours" : "10:00 AM – 11:30 PM",
+    description: `${s.name} is a renowned ${s.cuisines ? s.cuisines.join(", ") : cat.name.toLowerCase()} destination in ${AREAS[i % AREAS.length]}, celebrated for delicious recipes, hygiene and swift delivery.`,
+    offer: ["Flat 50% OFF up to ₹100", "20% OFF above ₹399", "Free delivery on ₹199+", "₹75 OFF with NAVA75"][Math.floor(r * 4)]!,
+    trending: r > 0.4,
     veg: s.veg ?? false,
   };
 });
@@ -183,22 +191,60 @@ interface ItemSeed {
 
 const CATALOG: Record<string, ItemSeed[]> = {
   food: [
-    { name: "Hyderabadi Chicken Dum Biryani", sub: "Biryani", price: 289, unit: "Serves 1", emoji: "🍛" },
-    { name: "Mutton Biryani Family Pack", sub: "Biryani", price: 649, unit: "Serves 3", emoji: "🍲" },
-    { name: "Veg Paneer Biryani", sub: "Biryani", price: 229, unit: "Serves 1", emoji: "🍚", veg: true },
-    { name: "Farmhouse Pizza", sub: "Pizza", price: 349, unit: "Medium", emoji: "🍕", veg: true, variantLabel: "Size", variants: ["Regular", "Medium", "Large"] },
-    { name: "Peri Peri Chicken Pizza", sub: "Pizza", price: 429, unit: "Medium", emoji: "🍕", variantLabel: "Size", variants: ["Regular", "Medium", "Large"] },
-    { name: "Classic Cheese Burger", sub: "Burgers", price: 169, unit: "1 pc", emoji: "🍔", veg: true },
-    { name: "Double Chicken Burger", sub: "Burgers", price: 239, unit: "1 pc", emoji: "🍔" },
-    { name: "Ghee Podi Idli", sub: "South Indian", price: 129, unit: "4 pcs", emoji: "🍥", veg: true },
-    { name: "Masala Dosa", sub: "South Indian", price: 119, unit: "1 pc", emoji: "🥞", veg: true },
-    { name: "Andhra Meals Unlimited", sub: "South Indian", price: 199, unit: "1 thali", emoji: "🍱", veg: true },
-    { name: "Chilli Paneer Dry", sub: "Chinese", price: 219, unit: "250 g", emoji: "🥘", veg: true },
-    { name: "Hakka Noodles", sub: "Chinese", price: 179, unit: "1 box", emoji: "🍜", veg: true },
-    { name: "Chicken Manchurian", sub: "Chinese", price: 249, unit: "300 g", emoji: "🍗" },
-    { name: "Double Ka Meetha", sub: "Desserts", price: 99, unit: "150 g", emoji: "🍮", veg: true },
-    { name: "Choco Lava Cake", sub: "Desserts", price: 89, unit: "2 pcs", emoji: "🍫", veg: true },
-    { name: "Gulab Jamun", sub: "Desserts", price: 79, unit: "4 pcs", emoji: "🍡", veg: true },
+    // Biryani & Rice Specials
+    { name: "Hyderabadi Chicken Dum Biryani", sub: "Biryani & Rice", price: 289, unit: "Serves 1", emoji: "🍛" },
+    { name: "Mutton Biryani Family Pack", sub: "Biryani & Rice", price: 649, unit: "Serves 3", emoji: "🍲" },
+    { name: "Bhimavaram Special Chicken Biryani", sub: "Biryani & Rice", price: 299, unit: "Serves 1", emoji: "🍛" },
+    { name: "Veg Paneer Biryani", sub: "Biryani & Rice", price: 229, unit: "Serves 1", emoji: "🍚", veg: true },
+    { name: "Kaju Paneer Biryani", sub: "Biryani & Rice", price: 279, unit: "Serves 1", emoji: "🍛", veg: true },
+    { name: "Authentic Chicken Mandi", sub: "Biryani & Rice", price: 399, unit: "Serves 2", emoji: "🍗" },
+    { name: "Prawns Dum Biryani", sub: "Biryani & Rice", price: 349, unit: "Serves 1", emoji: "🦐" },
+    
+    // Starters & Kebabs
+    { name: "Chicken 65 Special", sub: "Starters & Kebabs", price: 239, unit: "300 g", emoji: "🍗" },
+    { name: "Apollo Fish Fry", sub: "Starters & Kebabs", price: 279, unit: "250 g", emoji: "🐟" },
+    { name: "Paneer Tikka Charcoal Grilled", sub: "Starters & Kebabs", price: 219, unit: "6 pcs", emoji: "🧀", veg: true },
+    { name: "Crispy Corn Pepper Salt", sub: "Starters & Kebabs", price: 189, unit: "250 g", emoji: "🌽", veg: true },
+    { name: "Tandoori Chicken Half", sub: "Starters & Kebabs", price: 269, unit: "4 pcs", emoji: "🍗" },
+    { name: "Chicken Manchurian Bowl", sub: "Starters & Kebabs", price: 249, unit: "300 g", emoji: "🍗" },
+    { name: "Chilli Paneer Dry", sub: "Starters & Kebabs", price: 219, unit: "250 g", emoji: "🥘", veg: true },
+
+    // Main Course Curries
+    { name: "Chef Special Butter Chicken", sub: "Main Course Gravies", price: 279, unit: "350 ml", emoji: "🍛" },
+    { name: "Paneer Butter Masala", sub: "Main Course Gravies", price: 239, unit: "350 ml", emoji: "🥘", veg: true },
+    { name: "Mutton Rogan Josh", sub: "Main Course Gravies", price: 389, unit: "350 ml", emoji: "🥩" },
+    { name: "Dal Makhani Slow Cooked", sub: "Main Course Gravies", price: 199, unit: "350 ml", emoji: "🍲", veg: true },
+    { name: "Kadai Chicken Boneless", sub: "Main Course Gravies", price: 269, unit: "350 ml", emoji: "🍗" },
+
+    // Breads & Tandoor
+    { name: "Butter Naan", sub: "Breads & Roti", price: 45, unit: "1 pc", emoji: "🫓", veg: true },
+    { name: "Garlic Butter Naan", sub: "Breads & Roti", price: 55, unit: "1 pc", emoji: "🫓", veg: true },
+    { name: "Rumali Roti Soft", sub: "Breads & Roti", price: 30, unit: "1 pc", emoji: "🫓", veg: true },
+
+    // South Indian Tiffins
+    { name: "Ghee Karam Dosa", sub: "South Indian Tiffins", price: 129, unit: "1 pc", emoji: "🥞", veg: true },
+    { name: "Masala Dosa", sub: "South Indian Tiffins", price: 119, unit: "1 pc", emoji: "🥞", veg: true },
+    { name: "Ghee Podi Idli", sub: "South Indian Tiffins", price: 129, unit: "4 pcs", emoji: "🍥", veg: true },
+    { name: "MLA Pesarattu Upma", sub: "South Indian Tiffins", price: 139, unit: "1 pc", emoji: "🥞", veg: true },
+    { name: "Andhra Meals Unlimited", sub: "South Indian Tiffins", price: 199, unit: "1 thali", emoji: "🍱", veg: true },
+    { name: "South Indian Filter Coffee", sub: "South Indian Tiffins", price: 49, unit: "1 cup", emoji: "☕", veg: true },
+
+    // Pizzas & Burgers
+    { name: "Farmhouse Cheese Pizza", sub: "Pizzas & Burgers", price: 349, unit: "Medium", emoji: "🍕", veg: true, variantLabel: "Size", variants: ["Regular", "Medium", "Large"] },
+    { name: "Peri Peri Chicken Pizza", sub: "Pizzas & Burgers", price: 429, unit: "Medium", emoji: "🍕", variantLabel: "Size", variants: ["Regular", "Medium", "Large"] },
+    { name: "Cheesy 7 Gourmet Pizza", sub: "Pizzas & Burgers", price: 449, unit: "Medium", emoji: "🍕", veg: true },
+    { name: "Classic Cheese Burger", sub: "Pizzas & Burgers", price: 169, unit: "1 pc", emoji: "🍔", veg: true },
+    { name: "Double Chicken Crunch Burger", sub: "Pizzas & Burgers", price: 239, unit: "1 pc", emoji: "🍔" },
+    { name: "Cheesy Loaded Fries", sub: "Pizzas & Burgers", price: 149, unit: "1 box", emoji: "🍟", veg: true },
+    { name: "Hakka Noodles", sub: "Pizzas & Burgers", price: 179, unit: "1 box", emoji: "🍜", veg: true },
+
+    // Desserts & Beverages
+    { name: "World-Famous Hyderabadi Haleem", sub: "Desserts & Shakes", price: 279, unit: "350 g", emoji: "🍲" },
+    { name: "Apricot Delight", sub: "Desserts & Shakes", price: 149, unit: "1 bowl", emoji: "🍮", veg: true },
+    { name: "Double Ka Meetha", sub: "Desserts & Shakes", price: 99, unit: "150 g", emoji: "🍮", veg: true },
+    { name: "Choco Lava Cake", sub: "Desserts & Shakes", price: 89, unit: "2 pcs", emoji: "🍫", veg: true },
+    { name: "Gulab Jamun", sub: "Desserts & Shakes", price: 79, unit: "4 pcs", emoji: "🍡", veg: true },
+    { name: "Belgian Chocolate Thickshake", sub: "Desserts & Shakes", price: 179, unit: "350 ml", emoji: "🥤", veg: true },
   ],
   grocery: [
     { name: "Full Cream Milk", sub: "Dairy", price: 34, unit: "500 ml", emoji: "🥛", brand: "Amrit", veg: true },

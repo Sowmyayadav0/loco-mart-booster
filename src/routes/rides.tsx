@@ -54,7 +54,7 @@ const TRACK_STEPS = ["Driver assigned", "Arriving at pickup point", "Trip starte
 // STUNNING SIMULATED MAP CANVAS WITH ANIMATED LIVE DRIVERS & ROUTE TRACE
 function MapCanvas({ pickup, drop }: { pickup: string; drop: string }) {
   return (
-    <div className="relative h-60 sm:h-72 w-full overflow-hidden rounded-3xl border border-border bg-slate-900 shadow-md select-none">
+    <div className="relative h-60 sm:h-72 w-full overflow-hidden rounded-3xl border border-slate-200 dark:border-border bg-slate-900 shadow-md select-none">
       {/* Dark/Light Stylized Grid Pattern */}
       <div
         className="absolute inset-0 opacity-25"
@@ -197,15 +197,15 @@ function RidesPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:py-8">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:py-8 text-foreground">
       {/* 1. TOP SERVICE CATEGORY SWITCHER */}
       <ServiceCategorySwitcher activeService="ride" />
       {/* Top Title & Subtitle */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-700/60 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">LocoMart Rides</h1>
-            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-black text-amber-600 border border-amber-300/40">
+            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-400/40">
               ⚡ Zero Surge Guarantee
             </span>
           </div>
@@ -233,21 +233,21 @@ function RidesPage() {
       {stage === "locate" || stage === "select" || stage === "confirm" ? (
         <div className="grid gap-6 lg:grid-cols-12">
           {/* LEFT SIDE: Pickup & Destination Inputs */}
-          <section className="space-y-5 rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-xs lg:col-span-6">
+          <section className="space-y-5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 p-5 sm:p-6 shadow-xs lg:col-span-6">
             <div className="space-y-3.5">
               {/* Pickup Input */}
               <div>
                 <label className="mb-1 flex items-center justify-between text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
-                  <span className="flex items-center gap-1.5 text-emerald-600">
+                  <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                     <FiNavigation className="size-4" /> Pickup Location
                   </span>
-                  <span className="text-[10px] text-emerald-600 font-bold">● Current GPS Pin</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">● Current GPS Pin</span>
                 </label>
                 <div className="relative">
                   <input
                     value={pickup}
                     onChange={(e) => setPickup(e.target.value)}
-                    className="h-11 w-full rounded-2xl border border-border bg-muted/30 px-3.5 text-xs font-bold text-foreground outline-none focus:border-emerald-500 transition-colors"
+                    className="h-11 w-full rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-3.5 text-xs font-bold text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
               </div>
@@ -265,7 +265,7 @@ function RidesPage() {
                       setStage(e.target.value.trim() ? "select" : "locate");
                     }}
                     placeholder="Where to? (e.g. Indiranagar, MG Road, Airport)"
-                    className="h-11 w-full rounded-2xl border border-border bg-muted/30 px-3.5 text-xs font-bold text-foreground outline-none focus:border-emerald-500 transition-colors"
+                    className="h-11 w-full rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-3.5 text-xs font-bold text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-muted-foreground"
                   />
                   {drop ? (
                     <button
@@ -284,7 +284,7 @@ function RidesPage() {
             </div>
 
             {/* Saved Places Shortcuts */}
-            <div className="space-y-2 pt-1 border-t border-border/50">
+            <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700/50">
               <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                 SAVED PLACES
               </span>
@@ -297,7 +297,7 @@ function RidesPage() {
                       setDrop(p.address);
                       setStage("select");
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/20 px-3 py-1.5 text-xs font-bold text-foreground hover:border-emerald-500 hover:bg-emerald-500/10 transition-all shadow-2xs"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 px-3 py-1.5 text-xs font-bold text-foreground hover:border-emerald-500 hover:bg-emerald-500/10 transition-all shadow-2xs"
                   >
                     <span>{p.label === "Home" ? "🏠" : p.label === "Work" ? "🏢" : "📍"}</span>
                     <span>{p.label}</span>
@@ -307,7 +307,7 @@ function RidesPage() {
             </div>
 
             {/* Recent Places */}
-            <div className="space-y-2 pt-1 border-t border-border/50">
+            <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700/50">
               <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                 RECENT DESTINATIONS
               </span>
@@ -320,9 +320,9 @@ function RidesPage() {
                         setDrop(r);
                         setStage("select");
                       }}
-                      className="flex w-full items-center gap-2.5 rounded-2xl border border-border/50 bg-card p-2.5 text-left text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                      className="flex w-full items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-left text-xs font-semibold text-foreground hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     >
-                      <FiMapPin className="shrink-0 text-emerald-600 size-4" />
+                      <FiMapPin className="shrink-0 text-emerald-600 dark:text-emerald-400 size-4" />
                       <span className="line-clamp-1">{r}</span>
                     </button>
                   </li>
@@ -334,8 +334,8 @@ function RidesPage() {
           {/* RIGHT SIDE: Ride Vehicle Selector Cards */}
           <section className="space-y-4 lg:col-span-6">
             {stage === "locate" ? (
-              <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center space-y-3">
-                <span className="grid size-14 place-items-center rounded-full bg-emerald-500/10 text-2xl text-emerald-600 mx-auto">
+              <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800/60 p-10 text-center space-y-3">
+                <span className="grid size-14 place-items-center rounded-full bg-emerald-500/10 text-2xl text-emerald-600 dark:text-emerald-400 mx-auto">
                   🛺
                 </span>
                 <h3 className="text-base font-extrabold text-foreground">Where are you heading today?</h3>
@@ -347,7 +347,7 @@ function RidesPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-extrabold text-foreground">Available Ride Options</h3>
-                  <span className="text-xs font-bold text-emerald-600">{km} km route</span>
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{km} km route</span>
                 </div>
 
                 {/* Ride Vehicle Cards */}
@@ -361,30 +361,30 @@ function RidesPage() {
                         onClick={() => setVehicle(q.id)}
                         className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-all ${
                           active
-                            ? "border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500"
-                            : "border-border/70 bg-card hover:border-emerald-500/50 hover:bg-muted/40"
+                            ? "border-emerald-500 bg-emerald-500/10 shadow-xs ring-2 ring-emerald-500/30"
+                            : "border-slate-200 dark:border-slate-700/70 bg-white/90 dark:bg-slate-800/60 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-700/60"
                         }`}
                       >
                         <div className="flex items-center gap-3.5">
-                          <span className="grid size-12 place-items-center rounded-2xl bg-muted text-2xl shrink-0">
+                          <span className="grid size-12 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-700 text-2xl shrink-0">
                             {q.emoji}
                           </span>
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="text-sm font-black text-foreground">{q.name}</h4>
-                              <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-bold text-muted-foreground">
+                              <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[9px] font-bold text-muted-foreground">
                                 👥 {q.seats} seats
                               </span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {q.desc} · <b className="text-emerald-600 font-extrabold">{q.etaMin} min away</b>
-                            </p>
+                             <p className="text-xs text-muted-foreground mt-0.5">
+                               {q.desc} · <b className="text-emerald-600 dark:text-emerald-400 font-extrabold">{q.etaMin} min away</b>
+                             </p>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <span className="text-base font-black text-foreground">{currency(q.fare)}</span>
-                          <span className="block text-[10px] text-muted-foreground">No Surge</span>
+                           <span className="text-base font-black text-foreground">{currency(q.fare)}</span>
+                           <span className="block text-[10px] text-muted-foreground">No Surge</span>
                         </div>
                       </button>
                     );
@@ -392,7 +392,7 @@ function RidesPage() {
                 </div>
 
                 {/* Payment Methods & Book Button */}
-                <div className="rounded-3xl border border-border bg-card p-4 space-y-3.5 shadow-2xs">
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 p-4 space-y-3.5 shadow-2xs">
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1.5">
                       PAYMENT METHOD
@@ -406,7 +406,7 @@ function RidesPage() {
                           className={`rounded-full border px-3 py-1 text-xs font-extrabold transition-all ${
                             payment === p
                               ? "border-emerald-500 bg-emerald-500 text-white shadow-2xs"
-                              : "border-border bg-card text-muted-foreground hover:text-foreground"
+                              : "border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           {p}
@@ -441,10 +441,10 @@ function RidesPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="rounded-3xl border border-emerald-500/30 bg-card p-6 space-y-6 shadow-xl"
+            className="rounded-3xl border border-emerald-500/30 bg-white/95 dark:bg-slate-800/70 p-6 space-y-6 shadow-xl"
           >
             {/* Driver Profile Card */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/50 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700/50 pb-4">
               <div className="flex items-center gap-3.5">
                 <div className="grid size-14 place-items-center rounded-2xl bg-emerald-500/10 text-2xl text-emerald-600 font-bold border border-emerald-300/40">
                   👨‍✈️
@@ -456,17 +456,17 @@ function RidesPage() {
                       <FiStar className="fill-amber-400 text-amber-400" /> {driver.rating}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {driver.model} · <b className="text-foreground">{driver.vehicle}</b>
-                  </p>
+                   <p className="text-xs text-muted-foreground mt-0.5">
+                     {driver.model} · <b className="text-foreground">{driver.vehicle}</b>
+                   </p>
                 </div>
               </div>
 
               {/* OTP & Action Buttons */}
               <div className="flex items-center gap-2">
                 <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 text-center">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase block">OTP CODE</span>
-                  <span className="text-sm font-black text-emerald-600 tracking-wider">4821</span>
+                   <span className="text-[10px] font-bold text-muted-foreground uppercase block">OTP CODE</span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 tracking-wider">4821</span>
                 </div>
 
                 <a
@@ -479,7 +479,7 @@ function RidesPage() {
                 <button
                   type="button"
                   onClick={() => toast.info("Opening live chat with " + driver.name)}
-                  className="grid size-10 place-items-center rounded-2xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
+                  className="grid size-10 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-700 text-foreground hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                   title="Chat with Driver"
                 >
                   <FiMessageSquare className="size-4.5" />
@@ -496,8 +496,8 @@ function RidesPage() {
                     key={s}
                     className={`rounded-2xl border p-3 text-center space-y-1 transition-all ${
                       active
-                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-extrabold"
-                        : "border-border bg-muted/20 text-muted-foreground"
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-extrabold"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-muted-foreground"
                     }`}
                   >
                     <span className={`inline-block size-2 rounded-full ${active ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
@@ -522,7 +522,7 @@ function RidesPage() {
                   setStage("select");
                   toast.info("Ride cancelled. Zero charges applied.");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 <FiX className="size-4" /> Cancel Ride
               </button>
@@ -533,7 +533,7 @@ function RidesPage() {
 
       {/* RIDE COMPLETED SUMMARY */}
       {stage === "done" ? (
-        <section className="space-y-6 rounded-3xl border border-emerald-500/30 bg-card p-6 shadow-xl">
+        <section className="space-y-6 rounded-3xl border border-emerald-500/30 bg-white/95 dark:bg-slate-800/70 p-6 shadow-xl">
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-600 text-2xl font-bold">
               🎉
@@ -544,7 +544,7 @@ function RidesPage() {
             </div>
           </div>
 
-          <dl className="space-y-2 text-xs border-y border-border/50 py-3">
+          <dl className="space-y-2 text-xs border-y border-slate-200 dark:border-slate-700/50 py-3">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Vehicle Fare ({chosen.name})</dt>
               <dd className="font-bold text-foreground">{currency(chosen.fare)}</dd>
@@ -553,9 +553,9 @@ function RidesPage() {
               <dt className="text-muted-foreground">Distance Travelled</dt>
               <dd className="font-bold text-foreground">{km} km</dd>
             </div>
-            <div className="flex justify-between pt-1 font-black text-sm">
+            <div className="flex justify-between pt-1 font-black text-sm text-foreground">
               <dt>Paid via {payment}</dt>
-              <dd className="text-emerald-600">{currency(chosen.fare)}</dd>
+              <dd className="text-emerald-600 dark:text-emerald-400">{currency(chosen.fare)}</dd>
             </div>
           </dl>
 

@@ -37,19 +37,18 @@ export function useCartActions() {
       api.addToCart(productId, quantity ?? 1),
     onSuccess: () => {
       invalidate();
-      toast.success("Added to cart");
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
-  const setQty = useMutation({
+  const setQtyMutation = useMutation({
     mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
       api.setCartQuantity(itemId, quantity),
     onSuccess: invalidate,
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
-  const clear = useMutation({
+  const clearMutation = useMutation({
     mutationFn: api.clearCart,
     onSuccess: invalidate,
     onError: (e: Error) => toast.error(friendlyError(e.message)),
@@ -64,7 +63,23 @@ export function useCartActions() {
     add.mutate({ productId, quantity });
   };
 
-  return { addToCart, setQty, clear, adding: add.isPending };
+  const setQty = (itemId: string, quantity: number) => {
+    setQtyMutation.mutate({ itemId, quantity });
+  };
+
+  const clearCart = () => {
+    clearMutation.mutate();
+  };
+
+  const clearCallable = Object.assign(clearCart, clearMutation);
+
+  return {
+    addToCart,
+    setQty: Object.assign(setQty, setQtyMutation),
+    clear: clearCallable,
+    clearCart,
+    adding: add.isPending,
+  };
 }
 
 export function useWishlist() {

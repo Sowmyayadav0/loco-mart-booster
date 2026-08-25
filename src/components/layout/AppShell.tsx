@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import {
   FiArrowRight,
   FiAward,
@@ -36,6 +37,9 @@ import { navaStore } from "@/lib/navaStore";
 import { cn } from "@/lib/utils";
 
 import { LocationPickerModal } from "@/components/location/LocationPickerModal";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { useApp } from "@/context/AppContext";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 function useUnread() {
   const { signedIn } = useAuth();
@@ -50,7 +54,7 @@ function useUnread() {
 // Subcategories under FOOD (Restaurants & Cuisines ONLY)
 const FOOD_SUBCATEGORIES = [
   { slug: "restaurants", label: "Restaurants & Biryani", icon: "🍲" },
-  { slug: "restaurants", label: "Arabian & Mandi", icon: "🍢" },
+  { slug: "restaurants", label: "Rolls & Wraps", icon: "🌯" },
   { slug: "restaurants", label: "Pizza & Pasta", icon: "🍕" },
   { slug: "restaurants", label: "Burgers & Fast Food", icon: "🍔" },
   { slug: "restaurants", label: "Sweets & Desserts", icon: "🧁" },
@@ -139,19 +143,79 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const freeDeliveryProgress = Math.min(100, Math.round((subtotal / 199) * 100));
 
+  const { theme, activeHub, setActiveHub, getHomeRoute } = useApp();
+  const isDark = theme === "dark";
+  const homeTarget = getHomeRoute();
+
+  // Track active service hub across navigation
+  useEffect(() => {
+    if (pathname === "/category/shop" || pathname.startsWith("/category/shop")) {
+      setActiveHub("shop");
+    } else if (pathname === "/" || pathname === "/category/food" || pathname.startsWith("/category/food")) {
+      setActiveHub("food");
+    } else if (pathname.startsWith("/rides")) {
+      setActiveHub("ride");
+    } else if (pathname.startsWith("/courier")) {
+      setActiveHub("courier");
+    } else if (pathname.startsWith("/services")) {
+      setActiveHub("services");
+    }
+  }, [pathname, setActiveHub]);
+
+  // Determine per-lamp ambient tint colors for the full page
+  const isFood = pathname === "/" || pathname.includes("food") || pathname.includes("restaurant");
+  const isShop = pathname.includes("shop") || pathname.includes("grocery") || pathname.includes("dairy") || pathname.includes("bakery") || pathname.includes("fruits") || pathname.includes("meat");
+  const isRide = pathname.includes("ride");
+  const isCourier = pathname.includes("courier");
+
+  const lampColors = isDark
+    ? isShop
+      ? { bg: "#0f0a1a", glow1: "rgba(168, 85, 247, 0.12)", glow2: "rgba(139, 92, 246, 0.06)" }
+      : isRide
+      ? { bg: "#030d12", glow1: "rgba(6, 182, 212, 0.12)", glow2: "rgba(34, 211, 238, 0.06)" }
+      : isCourier
+      ? { bg: "#030f09", glow1: "rgba(16, 185, 129, 0.12)", glow2: "rgba(52, 211, 153, 0.06)" }
+      : { bg: "#120d04", glow1: "rgba(251, 146, 60, 0.12)", glow2: "rgba(245, 158, 11, 0.06)" }
+    : isShop
+    ? { bg: "#faf5ff", glow1: "rgba(168, 85, 247, 0.08)", glow2: "rgba(139, 92, 246, 0.04)" }
+    : isRide
+    ? { bg: "#f0fdfa", glow1: "rgba(6, 182, 212, 0.08)", glow2: "rgba(34, 211, 238, 0.04)" }
+    : isCourier
+    ? { bg: "#f0fdf4", glow1: "rgba(16, 185, 129, 0.08)", glow2: "rgba(52, 211, 153, 0.04)" }
+    : { bg: "#fffbf5", glow1: "rgba(251, 146, 60, 0.08)", glow2: "rgba(245, 158, 11, 0.04)" };
+
   return (
-    <div className="flex min-h-screen bg-slate-50/60 dark:bg-background text-foreground">
+    <div className="relative flex min-h-screen text-foreground transition-colors duration-700" style={{ backgroundColor: lampColors.bg }}>
+      {/* WHOLE-PAGE AMBIENT LAMP TINT — top radial bloom + full floor bleed */}
+      <motion.div
+        key={isFood ? "food" : isShop ? "shop" : isRide ? "ride" : "courier"}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.0, ease: "easeOut" }}
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 140% 55% at 50% -5%, ${lampColors.glow1} 0%, transparent 75%),
+            radial-gradient(ellipse 100% 40% at 50% 105%, ${lampColors.glow2} 0%, transparent 70%)
+          `,
+        }}
+      />
       {/* LEFT SIDEBAR NAVIGATION DRAWER */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between border-r border-slate-200 dark:border-border bg-white dark:bg-card p-4 transition-transform duration-300 w-[290px] max-w-[85vw] overflow-y-auto no-scrollbar shadow-2xl",
+          "fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between border-r border-white/10 bg-slate-950/90 backdrop-blur-2xl text-white p-4 transition-transform duration-300 w-[290px] max-w-[85vw] overflow-y-auto no-scrollbar shadow-2xl",
           (sidebarOpen || mobileSidebarOpen) ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="space-y-4">
           {/* Logo Badge & Close Button */}
           <div className="flex items-center justify-between px-1 py-1">
-            <Link to="/" onClick={closeSidebar} className="flex items-center gap-2.5 group">
+            <Link
+              to={homeTarget.to as any}
+              params={homeTarget.params as any}
+              onClick={closeSidebar}
+              className="flex items-center gap-2.5 group cursor-pointer"
+            >
               <span className="grid size-9 place-items-center rounded-2xl bg-emerald-600 text-lg font-black text-white shadow-sm transition-transform group-hover:scale-105">
                 L
               </span>
@@ -167,7 +231,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={closeSidebar}
-              className="grid size-8 place-items-center rounded-full border border-border/70 bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all shrink-0"
+              className="grid size-8 place-items-center rounded-full border border-white/20 bg-white/10 text-slate-300 hover:bg-red-500/20 hover:text-red-400 hover:border-red-400/30 transition-all shrink-0"
               aria-label="Close Menu"
               title="Close Menu"
             >
@@ -179,13 +243,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="space-y-1 pt-1">
             {/* HOME ITEM */}
             <Link
-              to="/"
+              to={homeTarget.to as any}
+              params={homeTarget.params as any}
               onClick={closeSidebar}
               className={cn(
                 "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all",
-                pathname === "/"
-                  ? "bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                pathname === "/" || pathname === homeTarget.pathname
+                  ? "bg-emerald-500/20 text-emerald-300 font-extrabold"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <div className="flex items-center gap-3">
@@ -196,7 +261,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* FOOD CATEGORY DROPDOWN */}
             <div className="space-y-1">
-              <div className="flex items-center justify-between rounded-xl hover:bg-muted transition-all pr-2">
+              <div className="flex items-center justify-between rounded-xl hover:bg-white/10 transition-all pr-2">
                 <Link
                   to="/category/$slug"
                   params={{ slug: "food" }}
@@ -204,22 +269,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "flex-1 flex items-center justify-between px-3 py-2 text-xs font-bold",
                     pathname.includes("food")
-                      ? "text-emerald-700 dark:text-emerald-400 font-extrabold"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-emerald-400 font-extrabold"
+                      : "text-slate-300 hover:text-white"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-sm">🍿</span>
                     <span>Food</span>
                   </div>
-                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-400">
                     EXPRESS
                   </span>
                 </Link>
                 <button
                   type="button"
                   onClick={() => setFoodDropdownOpen(!foodDropdownOpen)}
-                  className="p-1.5 text-muted-foreground hover:text-foreground"
+                  className="p-1.5 text-slate-400 hover:text-white"
                   aria-label="Toggle Food Subcategories"
                 >
                   <FiChevronDown className={cn("size-3.5 transition-transform", foodDropdownOpen ? "rotate-180" : "")} />
@@ -240,8 +305,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         className={cn(
                           "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all",
                           active
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            ? "bg-emerald-500/15 text-emerald-400 font-extrabold"
+                            : "text-slate-400 hover:bg-white/10 hover:text-white"
                         )}
                       >
                         <span className="text-xs">{sub.icon}</span>
@@ -255,7 +320,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* SHOP CATEGORY DROPDOWN */}
             <div className="space-y-1">
-              <div className="flex items-center justify-between rounded-xl hover:bg-muted transition-all pr-2">
+              <div className="flex items-center justify-between rounded-xl hover:bg-white/10 transition-all pr-2">
                 <Link
                   to="/category/$slug"
                   params={{ slug: "shop" }}
@@ -263,8 +328,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "flex-1 flex items-center gap-3 px-3 py-2 text-xs font-bold",
                     pathname.includes("shop")
-                      ? "text-purple-700 dark:text-purple-400 font-extrabold"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-purple-400 font-extrabold"
+                      : "text-slate-300 hover:text-white"
                   )}
                 >
                   <span className="text-sm">🛍️</span>
@@ -273,7 +338,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setShopDropdownOpen(!shopDropdownOpen)}
-                  className="p-1.5 text-muted-foreground hover:text-foreground"
+                  className="p-1.5 text-slate-400 hover:text-white"
                   aria-label="Toggle Shop Subcategories"
                 >
                   <FiChevronDown className={cn("size-3.5 transition-transform", shopDropdownOpen ? "rotate-180" : "")} />
@@ -294,8 +359,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         className={cn(
                           "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all",
                           active
-                            ? "bg-purple-500/10 text-purple-700 dark:text-purple-400 font-extrabold"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            ? "bg-purple-500/15 text-purple-400 font-extrabold"
+                            : "text-slate-400 hover:bg-white/10 hover:text-white"
                         )}
                       >
                         <span className="text-xs">{sub.icon}</span>
@@ -314,15 +379,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all",
                 pathname.startsWith("/rides")
-                  ? "bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-extrabold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-cyan-500/20 text-cyan-300 font-extrabold"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <div className="flex items-center gap-3">
                 <span className="text-sm">🛺</span>
                 <span>Rides</span>
               </div>
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-black uppercase text-amber-600 dark:text-amber-400">
+              <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[9px] font-black uppercase text-cyan-400">
                 LIVE
               </span>
             </Link>
@@ -334,8 +399,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all",
                 pathname.startsWith("/courier")
-                  ? "bg-blue-100/70 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-extrabold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-emerald-500/20 text-emerald-300 font-extrabold"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <div className="flex items-center gap-3">
@@ -351,8 +416,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all",
                 pathname.startsWith("/offers")
-                  ? "bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-orange-500/20 text-orange-300 font-extrabold"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <div className="flex items-center gap-3">
@@ -368,8 +433,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all",
                 pathname.startsWith("/explore")
-                  ? "bg-muted text-foreground font-extrabold"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-white/15 text-white font-extrabold"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <div className="flex items-center gap-3">
@@ -379,7 +444,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           </nav>
 
-          <div className="border-t border-border/60 my-2" />
+          <div className="border-t border-white/10 my-2" />
 
           {/* Account Tools List */}
           <div className="space-y-1">
@@ -390,9 +455,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={tool.label}
                   to={tool.to}
                   onClick={closeSidebar}
-                  className="flex items-center gap-3 rounded-xl px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  className="flex items-center gap-3 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  <Icon className="size-4 text-muted-foreground" />
+                  <Icon className="size-4 text-slate-500" />
                   <span>{tool.label}</span>
                 </Link>
               );
@@ -401,7 +466,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Bottom Unlock Free Delivery Promo Card */}
-        <div className="mt-6 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 dark:bg-emerald-950/30 p-3 space-y-2">
+        <div className="mt-6 rounded-2xl border border-emerald-500/25 bg-emerald-950/40 p-3 space-y-2">
           <div>
             <h4 className="text-[11px] font-black text-foreground">Unlock Free Delivery</h4>
             <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -435,83 +500,148 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* MAIN CONTAINER */}
       <div className="flex flex-1 flex-col min-w-0 transition-all duration-300">
-        {/* TOP HEADER BAR */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 via-[#044D63] to-teal-950 px-4 py-2.5 backdrop-blur-xl shadow-lg text-white">
-          <div className="flex items-center gap-2.5">
-            {/* Hamburger Menu Button */}
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center shadow-md shrink-0 backdrop-blur-md"
-              aria-label="Open Sidebar"
-              title="Open Menu"
-            >
-              <FiMenu className="size-5" />
-            </button>
+        {/* TOP HEADER BAR - SLEEK CRYSTAL GLASS NAVBAR */}
+        <header
+          className={cn(
+            "sticky top-0 z-30 flex items-center justify-between gap-3 sm:gap-4 border-b backdrop-blur-3xl backdrop-saturate-200 px-3.5 sm:px-6 py-2.5 transition-colors duration-300",
+            isDark
+              ? "border-white/10 bg-slate-950/80 text-white shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.12)]"
+              : "border-slate-200/80 bg-white/85 text-slate-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+          )}
+        >
+          {/* Top Laser Specular Highlight */}
+          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
 
-            {/* Location Selector Badge - Vibrant Pill */}
+          {/* Left: Delivery Location Capsule */}
+          <div className="flex items-center min-w-0">
+            {/* Location Selector Badge - Luxury Crystal Radar Pill */}
             <button
               type="button"
               onClick={() => setLocationPickerOpen(true)}
-              className="flex items-center gap-1.5 rounded-2xl bg-cyan-400/15 border border-cyan-400/40 px-3 py-1.5 text-xs text-cyan-200 backdrop-blur-md transition-all hover:bg-cyan-400/25 shadow-sm max-w-[140px] sm:max-w-[200px] shrink-0"
+              className={cn(
+                "group flex items-center gap-2 rounded-xl sm:rounded-2xl border px-2.5 sm:px-3 py-1.5 text-left backdrop-blur-md transition-all duration-200 shadow-xs max-w-[175px] sm:max-w-[250px] shrink-0 cursor-pointer active:scale-95",
+                isDark
+                  ? "bg-white/5 hover:bg-white/10 border-white/15 hover:border-cyan-400/50 text-white"
+                  : "bg-slate-100/90 hover:bg-slate-200/80 border-slate-200 hover:border-cyan-500/50 text-slate-900"
+              )}
               title="Change Delivery Location"
             >
-              <FiMapPin className="text-[#00BCD4] size-3.5 shrink-0 animate-pulse" />
-              <span className="truncate font-black text-xs text-white">
-                {selectedLocation.split(",")[0] || "Location"}
-              </span>
-              <FiChevronDown className="size-3 shrink-0 text-cyan-300" />
+              {/* Pulsing Live Radar Indicator */}
+              <div className="relative flex size-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex rounded-full size-2 bg-cyan-400 shadow-[0_0_8px_#00BCD4]" />
+              </div>
+
+              <div className="flex flex-col min-w-0">
+                <span className={cn("text-[9px] font-bold tracking-wider uppercase leading-none", isDark ? "text-slate-400" : "text-slate-500")}>
+                  Deliver to
+                </span>
+                <div className="flex items-center gap-1 min-w-0 mt-0.5">
+                  <span className={cn("truncate font-extrabold text-xs transition-colors", isDark ? "text-white group-hover:text-cyan-300" : "text-slate-900 group-hover:text-cyan-600")}>
+                    {selectedLocation.split(",")[0] || "Select Location"}
+                  </span>
+                  <FiChevronDown className={cn("size-3 shrink-0 transition-transform group-hover:translate-y-0.5", isDark ? "text-slate-400 group-hover:text-cyan-300" : "text-slate-500 group-hover:text-cyan-600")} />
+                </div>
+              </div>
             </button>
           </div>
 
+          {/* Center: Search bar (hidden on small screens) */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (term.trim()) void navigate({ to: "/search", search: { q: term.trim() } });
+            }}
+            className="hidden sm:flex flex-1 max-w-sm relative mx-2"
+          >
+            <FiSearch className={cn("pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5", isDark ? "text-slate-400" : "text-slate-500")} />
+            <input
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="Search products, stores…"
+              aria-label="Search"
+              className={cn(
+                "h-8 w-full rounded-xl border pl-8 pr-3 text-xs outline-none focus:border-cyan-400/60 transition-all",
+                isDark
+                  ? "bg-white/8 border-white/15 text-white placeholder-slate-400 focus:bg-white/12"
+                  : "bg-slate-100/90 border-slate-200 text-slate-900 placeholder-slate-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20"
+              )}
+            />
+          </form>
+
           {/* Right Header Navigation Icons & Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Smooth Theme Toggle Switcher */}
+            <ThemeToggle className="shrink-0" />
+
             <Link
               to="/offers"
-              className="hidden lg:flex items-center gap-1 text-xs font-black text-amber-300 bg-amber-400/15 border border-amber-300/40 rounded-xl px-2.5 py-1.5 hover:bg-amber-400/25 transition-all"
+              className={cn(
+                "hidden lg:flex items-center gap-1.5 text-xs font-bold rounded-xl px-3 py-1.5 transition-all shadow-xs border",
+                isDark
+                  ? "text-amber-300 bg-amber-400/10 border-amber-300/30 hover:bg-amber-400/20 hover:border-amber-300/60"
+                  : "text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100/80"
+              )}
             >
-              <FiTag className="size-3.5 text-amber-300" /> Offers
+              <FiTag className="size-3.5 text-amber-500" />
+              <span>Offers</span>
             </Link>
 
             <Link
               to="/orders"
-              className="hidden lg:flex items-center gap-1 text-xs font-black text-cyan-200 bg-cyan-400/15 border border-cyan-300/40 rounded-xl px-2.5 py-1.5 hover:bg-cyan-400/25 transition-all"
+              className={cn(
+                "hidden lg:flex items-center gap-1.5 text-xs font-bold rounded-xl px-3 py-1.5 transition-all shadow-xs border",
+                isDark
+                  ? "text-cyan-200 bg-cyan-400/10 border-cyan-300/30 hover:bg-cyan-400/20 hover:border-cyan-300/60"
+                  : "text-cyan-800 bg-cyan-50 border-cyan-200 hover:bg-cyan-100/80"
+              )}
             >
-              <FiPackage className="size-3.5 text-cyan-300" /> Orders
+              <FiPackage className="size-3.5 text-cyan-500" />
+              <span>Orders</span>
             </Link>
 
             <Link
               to="/wishlist"
-              className="hidden md:grid size-9 place-items-center rounded-xl border border-rose-400/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 transition-all shrink-0"
+              className={cn(
+                "hidden md:grid size-8.5 sm:size-9 place-items-center rounded-xl border transition-all shrink-0 shadow-xs",
+                isDark
+                  ? "border-rose-400/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:border-rose-400/60"
+                  : "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+              )}
               title="Wishlist"
             >
-              <FiHeart className="size-4.5 stroke-[2]" />
+              <FiHeart className="size-4 stroke-[2]" />
             </Link>
 
             {/* Notifications Icon Button */}
             <Link
               to="/notifications"
-              className="relative grid size-9 place-items-center rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all shrink-0 backdrop-blur-md"
+              className={cn(
+                "relative grid size-8.5 sm:size-9 place-items-center rounded-xl border transition-all shrink-0 backdrop-blur-md shadow-xs active:scale-95",
+                isDark
+                  ? "border-white/15 bg-white/5 text-slate-200 hover:text-white hover:bg-white/15 hover:border-white/30"
+                  : "border-slate-200 bg-slate-100/90 text-slate-700 hover:text-slate-950 hover:bg-slate-200/80"
+              )}
               aria-label="Notifications"
               title="Notifications"
             >
-              <FiBell className="size-4.5 stroke-[2]" />
+              <FiBell className="size-4 stroke-[2]" />
               {unread > 0 ? (
-                <span className="absolute -top-1 -right-1 grid size-4.5 place-items-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-slate-900 shadow-md z-10">
+                <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-slate-950 shadow-md z-10 animate-pulse">
                   {unread > 9 ? "9+" : unread}
                 </span>
               ) : null}
             </Link>
 
-            {/* Cart Button */}
+            {/* Cart Button - Glowing 3D Pill */}
             <Link
               to="/cart"
-              className="relative flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 via-[#00BCD4] to-emerald-400 hover:opacity-95 px-3 py-1.5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/30 transition-transform hover:scale-105"
+              className="relative flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:opacity-95 px-3 sm:px-3.5 py-1.5 text-xs font-black text-slate-950 shadow-[0_4px_16px_rgba(0,188,212,0.35)] transition-all hover:scale-105 active:scale-95"
             >
-              <FiShoppingCart className="size-4" />
-              <span className="hidden sm:inline">Cart</span>
+              <FiShoppingCart className="size-4 stroke-[2.5]" />
+              <span className="hidden sm:inline font-black">Cart</span>
               {count > 0 ? (
-                <span className="grid min-w-4 h-4 place-items-center rounded-full bg-slate-950 px-1 text-[10px] font-black text-cyan-300 shadow-2xs">
+                <span className="grid min-w-4 h-4 place-items-center rounded-full bg-slate-950 px-1 text-[10px] font-black text-cyan-300 shadow-xs">
                   {count}
                 </span>
               ) : null}
@@ -520,16 +650,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Profile Avatar Button */}
             <Link
               to="/account"
-              className="grid size-9 place-items-center rounded-full bg-gradient-to-tr from-cyan-400 to-[#044D63] text-white font-extrabold text-xs border-2 border-white/40 shadow-md hover:scale-105 transition-transform"
+              className="relative grid size-8.5 sm:size-9 place-items-center rounded-full bg-gradient-to-tr from-cyan-500 via-teal-600 to-slate-900 text-white font-black text-xs border-2 border-white/30 hover:border-cyan-400 shadow-[0_2px_10px_rgba(0,188,212,0.3)] hover:scale-105 active:scale-95 transition-all"
               title={userName}
             >
               {userInitial}
+              {/* Online indicator dot */}
+              <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 shadow-xs" />
             </Link>
           </div>
         </header>
 
         {/* Page Body View */}
-        <main className="flex-1 pb-16">{children}</main>
+        <main className="relative flex-1 pb-24 sm:pb-20 z-10">{children}</main>
+
+        {/* ULTRA-SMOOTH GLASS FLOATING BOTTOM NAVIGATION DOCK (HOME, SERVICES, ORDERS & INTEGRATED CART BANNER) */}
+        <BottomNav />
       </div>
 
       {/* LOCATION PICKER MODAL */}

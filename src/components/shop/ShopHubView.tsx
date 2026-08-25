@@ -45,8 +45,7 @@ export function ShopHubView() {
 
   // Reorder Reliance Smart Basket
   function handleReorder() {
-    addToCart("prod-1", 1);
-    toast.success("Added Reliance Smart Basket to Cart!");
+    addToCart("p-17", 1);
   }
 
   return (
@@ -89,47 +88,129 @@ export function ShopHubView() {
         </div>
       </div>
 
-      {/* 3. EXPLORE SHOP CATEGORIES */}
-      <div className="space-y-4">
+      {/* 3. EXPLORE SHOP CATEGORIES - COMPACT CREATIVE CAPSULE RIBBON */}
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            Explore Shop Categories
-          </h2>
+          <div className="flex items-center gap-2">
+            <span className="grid size-6 place-items-center rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 text-xs">
+              ✦
+            </span>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+              Explore Shop Aisles
+            </h2>
+          </div>
           <button
             type="button"
             onClick={() => void navigate({ to: "/search", search: { q: "" } })}
-            className="flex items-center gap-1 text-xs font-black text-[#00BCD4] hover:underline"
+            className="flex items-center gap-1 text-[11px] font-extrabold tracking-wider text-purple-500 hover:text-purple-400 uppercase transition-colors"
           >
-            <span>MORE</span>
-            <FiArrowRight className="size-3.5" />
+            <span>All Aisles</span>
+            <FiArrowRight className="size-3" />
           </button>
         </div>
 
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-          {[
-            { name: "Groceries", icon: "🛒", bg: "bg-emerald-50 text-emerald-700", slug: "grocery" },
-            { name: "Dairy & Eggs", icon: "🥛", bg: "bg-sky-50 text-sky-700", slug: "dairy" },
-            { name: "Bakery", icon: "🥐", bg: "bg-amber-50 text-amber-700", slug: "bakery" },
-            { name: "Fruits & Veg", icon: "🍎", bg: "bg-green-50 text-green-700", slug: "fruits" },
-            { name: "Meat & Fish", icon: "🍗", bg: "bg-rose-50 text-rose-700", slug: "meat" },
-            { name: "Pharmacy", icon: "💊", bg: "bg-teal-50 text-teal-700", slug: "pharmacy" },
-            { name: "Fashion", icon: "👗", bg: "bg-pink-50 text-pink-700", slug: "fashion" },
-            { name: "Electronics", icon: "📱", bg: "bg-purple-50 text-purple-700", slug: "electronics" },
-          ].map((cat) => (
-            <motion.div
-              key={cat.name}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => void navigate({ to: "/category/$slug", params: { slug: cat.slug } })}
-              className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md hover:border-cyan-300 transition-all cursor-pointer space-y-1.5"
-            >
-              <span className={`grid size-12 place-items-center rounded-2xl text-2xl ${cat.bg}`}>
-                {cat.icon}
-              </span>
-              <span className="text-xs font-bold text-slate-800 text-center leading-tight">
-                {cat.name}
-              </span>
-            </motion.div>
-          ))}
+        {/* Compact Horizontal Glass Capsule Stream */}
+        <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 pt-1 no-scrollbar select-none touch-pan-x">
+            {[
+              {
+                name: "Groceries",
+                badge: "Staples 🛒",
+                img: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-emerald-500/25 hover:border-emerald-400/50",
+                badgeColor: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
+                slug: "grocery",
+              },
+              {
+                name: "Dairy & Eggs",
+                badge: "Fresh 🥛",
+                img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-sky-500/25 hover:border-sky-400/50",
+                badgeColor: "text-sky-400 bg-sky-500/15 border-sky-500/30",
+                slug: "dairy",
+              },
+              {
+                name: "Bakery",
+                badge: "Oven 🥐",
+                img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-amber-500/25 hover:border-amber-400/50",
+                badgeColor: "text-amber-400 bg-amber-500/15 border-amber-500/30",
+                slug: "bakery",
+              },
+              {
+                name: "Fruits & Veg",
+                badge: "Farm 🍎",
+                img: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-green-500/25 hover:border-green-400/50",
+                badgeColor: "text-green-400 bg-green-500/15 border-green-400/30",
+                slug: "fruits",
+              },
+              {
+                name: "Meat & Fish",
+                badge: "Prime 🍗",
+                img: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-rose-500/25 hover:border-rose-400/50",
+                badgeColor: "text-rose-400 bg-rose-500/15 border-rose-500/30",
+                slug: "meat",
+              },
+              {
+                name: "Pharmacy",
+                badge: "Care 💊",
+                img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-teal-500/25 hover:border-teal-400/50",
+                badgeColor: "text-teal-400 bg-teal-500/15 border-teal-500/30",
+                slug: "pharmacy",
+              },
+              {
+                name: "Fashion",
+                badge: "Trend 👗",
+                img: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-pink-500/25 hover:border-pink-400/50",
+                badgeColor: "text-pink-400 bg-pink-500/15 border-pink-500/30",
+                slug: "fashion",
+              },
+              {
+                name: "Electronics",
+                badge: "Tech 📱",
+                img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80",
+                glow: "hover:shadow-purple-500/25 hover:border-purple-400/50",
+                badgeColor: "text-purple-400 bg-purple-500/15 border-purple-500/30",
+                slug: "electronics",
+              },
+            ].map((cat) => (
+              <motion.button
+                key={cat.name}
+                type="button"
+                whileHover={{ y: -3, scale: 1.04 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                onClick={() => void navigate({ to: "/category/$slug", params: { slug: cat.slug } })}
+                className={`group shrink-0 flex items-center gap-2.5 h-11 sm:h-12 pl-1.5 pr-3 rounded-full bg-slate-950/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/15 shadow-md ${cat.glow} hover:bg-slate-900 transition-all duration-200 cursor-pointer`}
+              >
+                {/* Micro Lens Photo Orb */}
+                <div className="relative size-8 sm:size-9 rounded-full overflow-hidden p-0.5 bg-gradient-to-tr from-white/40 to-transparent shadow-xs">
+                  <img
+                    src={cat.img}
+                    alt={cat.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover rounded-full group-hover:scale-115 transition-transform duration-300"
+                  />
+                </div>
+
+                {/* Name */}
+                <span className="text-xs sm:text-[13px] font-black text-white tracking-tight group-hover:text-purple-400 transition-colors">
+                  {cat.name}
+                </span>
+
+                {/* Micro Pill Badge */}
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.badgeColor}`}
+                >
+                  {cat.badge}
+                </span>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -152,32 +233,36 @@ export function ShopHubView() {
           {[
             {
               id: "shop-1",
-              name: "Fresh Organic Fruit Basket (3kg)",
-              price: 299,
+              productId: "p-17",
+              name: "Fresh Full Cream Milk & Curd",
+              price: 64,
               time: "15 mins",
               rating: 4.9,
-              img: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=600&q=80",
+              img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80",
             },
             {
               id: "shop-2",
-              name: "Wireless ANC Bluetooth Earbuds",
-              price: 1299,
+              productId: "p-49",
+              name: "BassPods Pro ANC Earbuds",
+              price: 3499,
               time: "25 mins",
               rating: 4.8,
               img: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
             },
             {
               id: "shop-3",
-              name: "Amul Butter & Fresh Paneer Pack",
-              price: 185,
+              productId: "p-19",
+              name: "Malai Paneer Fresh Block",
+              price: 92,
               time: "10 mins",
               rating: 4.9,
-              img: "https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=600&q=80",
+              img: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=600&q=80",
             },
             {
               id: "shop-4",
+              productId: "p-33",
               name: "Cotton Casual Slim Fit Shirt",
-              price: 599,
+              price: 999,
               time: "30 mins",
               rating: 4.7,
               img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80",
@@ -207,9 +292,9 @@ export function ShopHubView() {
                   <button
                     type="button"
                     onClick={() => {
-                      addToCart("prod-1", 1);
+                      addToCart(item.productId, 1);
                     }}
-                    className="size-8 rounded-full bg-[#EEFBFD] hover:bg-[#00BCD4] text-[#044D63] hover:text-white grid place-items-center transition-colors shadow-2xs"
+                    className="size-8 rounded-full bg-[#EEFBFD] hover:bg-[#00BCD4] text-[#044D63] hover:text-white grid place-items-center transition-colors shadow-2xs cursor-pointer"
                   >
                     <FiPlus className="size-4" />
                   </button>
@@ -388,9 +473,9 @@ export function ShopHubView() {
               <button
                 type="button"
                 onClick={() => {
-                  addToCart("prod-2", 1);
+                  addToCart("p-18", 1);
                 }}
-                className="w-full h-9 rounded-xl bg-[#00BCD4] hover:bg-cyan-500 text-white font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1"
+                className="w-full h-9 rounded-xl bg-[#00BCD4] hover:bg-cyan-500 text-white font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
                 <FiPlus className="size-3.5" /> Add
               </button>
